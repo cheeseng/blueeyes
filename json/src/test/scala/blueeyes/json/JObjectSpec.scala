@@ -1,12 +1,13 @@
 package blueeyes.json
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
 import JsonAST._
 
-class JObjectSpec extends Specification{
+class JObjectSpec extends WordSpec with MustMatchers {
   "JObjects equal even fields order is different" in {
-    JsonParser.parse(j1) mustEqual(JsonParser.parse(j2))
+    JsonParser.parse(j1) must equal (JsonParser.parse(j2))
   }
 
   val j1 = """{

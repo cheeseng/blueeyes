@@ -17,18 +17,19 @@
 package blueeyes {
 package json {
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
-object DiffExamples extends Specification {
+class DiffExamples extends WordSpec with MustMatchers {
   import JsonAST._
   import JsonParser._
   import MergeExamples.{scala1, scala2, lotto1, lotto2, mergedLottoResult}
 
   "Diff example" in {
     val Diff(changed, added, deleted) = scala1 diff scala2
-    changed mustEqual expectedChanges
-    added mustEqual expectedAdditions
-    deleted mustEqual expectedDeletions
+    changed must equal (expectedChanges)
+    added must equal (expectedAdditions)
+    deleted must equal (expectedDeletions)
   }
 
   val expectedChanges = parse("""
@@ -55,9 +56,9 @@ object DiffExamples extends Specification {
 
   "Lotto example" in {
     val Diff(changed, added, deleted) = mergedLottoResult diff lotto1
-    changed mustEqual JNothing
-    added mustEqual JNothing
-    deleted mustEqual lotto2
+    changed must equal (JNothing)
+    added must equal (JNothing)
+    deleted must equal (lotto2)
   }
 
   "Example from http://tlrobinson.net/projects/js/jsondiff/" in {
@@ -67,7 +68,7 @@ object DiffExamples extends Specification {
     val expectedAdditions = read("/diff-example-expected-additions.json")
     val expectedDeletions = read("/diff-example-expected-deletions.json")
 
-    json1 diff json2 mustEqual Diff(expectedChanges, expectedAdditions, expectedDeletions)
+    json1 diff json2 must equal (Diff(expectedChanges, expectedAdditions, expectedDeletions))
   }
 
   private def read(resource: String) = 

@@ -16,16 +16,16 @@
 
 package blueeyes.json
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
+import org.scalatest.prop.Checkers
 import org.scalacheck.{Gen, Arbitrary, Prop}
 import Prop.forAll
 import Arbitrary._
 
 import JsonAST._
 
-import org.specs2.ScalaCheck
-
-object JPathSpec extends Specification with ScalaCheck with ArbitraryJPath with ArbitraryJValue {
+class JPathSpec extends WordSpec with MustMatchers with Checkers with ArbitraryJPath with ArbitraryJValue {
   "Parser" should {
     "parse all valid JPath strings" in {
       check { (jpath: JPath) =>
@@ -34,7 +34,7 @@ object JPathSpec extends Specification with ScalaCheck with ArbitraryJPath with 
     }
 
     "forgivingly parse initial field name without leading dot" in {
-      JPath("foo.bar").nodes mustEqual (JPathField("foo") :: JPathField("bar") :: Nil)
+      JPath("foo.bar").nodes must equal (JPathField("foo") :: JPathField("bar") :: Nil)
     }
   }
 
@@ -59,41 +59,41 @@ object JPathSpec extends Specification with ScalaCheck with ArbitraryJPath with 
     "extract a second level node" in {
       val j = JObject(JField("address", JObject( JField("city", JString("B")) :: JField("street", JString("2")) ::  Nil)) :: Nil)
 
-      JPath("address.city").extract(j) mustEqual(JString("B"))
+      JPath("address.city").extract(j) must equal (JString("B"))
     }
   }
 
   "Parent" should {
     "return parent" in {
-      JPath(".foo.bar").parent must beSome(JPath(".foo"))
+      JPath(".foo.bar").parent must be (Some(JPath(".foo")))
     }
 
     "return Identity for path 1 level deep" in {
-      JPath(".foo").parent must beSome(JPath.Identity)
+      JPath(".foo").parent must be (Some(JPath.Identity))
     }
 
     "return None when there is no parent" in {
-      JPath.Identity.parent mustEqual None
+      JPath.Identity.parent must equal (None)
     }
   }
 
   "Ancestors" should {
     "return two ancestors" in {
-      JPath(".foo.bar.baz").ancestors mustEqual List(JPath(".foo.bar"), JPath(".foo"), JPath.Identity)
+      JPath(".foo.bar.baz").ancestors must equal (List(JPath(".foo.bar"), JPath(".foo"), JPath.Identity))
     }
 
     "return empty list for identity" in {
-      JPath.Identity.ancestors mustEqual Nil
+      JPath.Identity.ancestors must equal (Nil)
     }
   }
 
   "dropPrefix" should {
     "return just the remainder" in {
-      JPath(".foo.bar[1].baz").dropPrefix(".foo.bar") must beSome(JPath("[1].baz"))
+      JPath(".foo.bar[1].baz").dropPrefix(".foo.bar") must be (Some(JPath("[1].baz")))
     }
 
     "return none on path mismatch" in {
-      JPath(".foo.bar[1].baz").dropPrefix(".foo.bar[2]") must beNone
+      JPath(".foo.bar[1].baz").dropPrefix(".foo.bar[2]") must be (None)
     }
   }
 
@@ -115,7 +115,7 @@ object JPathSpec extends Specification with ScalaCheck with ArbitraryJPath with 
 
       val expected = List(1,0,2,3,4,6,5,9,10,7,8) map test
 
-      test.sorted must_== expected
+      test.sorted must equal (expected)
     }
   }
 }

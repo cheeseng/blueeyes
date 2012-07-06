@@ -18,13 +18,12 @@ package blueeyes
 package json
 
 import org.scalacheck._
-import org.specs2.mutable.Specification
-import org.specs2.ScalaCheck
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
+import org.scalatest.prop.Checkers
 
-object JsonASTSpec extends Specification with ScalaCheck with ArbitraryJPath with ArbitraryJValue {
+class JsonASTSpec extends WordSpec with Checkers with MustMatchers with ArbitraryJPath with ArbitraryJValue {
   import JsonAST._
-
-  override val defaultPrettyParams = Pretty.Params(2)
 
   "Functor identity" in {
     val identityProp = (json: JValue) => json == (json mapUp identity)
@@ -109,7 +108,7 @@ object JsonASTSpec extends Specification with ScalaCheck with ArbitraryJPath wit
 
     val expected = List((JPath(".a"), JObject(Nil)))
 
-    test.flattenWithPath must_== expected
+    test.flattenWithPath must equal (expected)
   }
   
   "flattenWithPath includes empty array values" in {
@@ -117,7 +116,7 @@ object JsonASTSpec extends Specification with ScalaCheck with ArbitraryJPath wit
 
     val expected = List((JPath(".a"), JArray(Nil)))
 
-    test.flattenWithPath must_== expected
+    test.flattenWithPath must equal (expected)
   }
 
   "flattenWithPath for values produces a single value with the identity path" in {
@@ -125,7 +124,7 @@ object JsonASTSpec extends Specification with ScalaCheck with ArbitraryJPath wit
 
     val expected = List((JPath.Identity, test))
 
-    test.flattenWithPath must_== expected
+    test.flattenWithPath must equal (expected)
   }
 
   "flattenWithPath on arrays produces index values" in {
@@ -133,7 +132,7 @@ object JsonASTSpec extends Specification with ScalaCheck with ArbitraryJPath wit
 
     val expected = List((JPath("[0]"), JInt(1)))
 
-    test.flattenWithPath must_== expected
+    test.flattenWithPath must equal (expected)
   }
 
   "flattenWithPath does not produce JNothing entries" in {
@@ -149,7 +148,7 @@ object JsonASTSpec extends Specification with ScalaCheck with ArbitraryJPath wit
       JPath(".fn[0].fr") -> JInt(-2)
     )
 
-    test.flattenWithPath must_== expected
+    test.flattenWithPath must equal (expected)
   }
 
   "unflatten is the inverse of flattenWithPath" in {
@@ -219,12 +218,20 @@ object JsonASTSpec extends Specification with ScalaCheck with ArbitraryJPath wit
             (jv.unsafeInsert(p, toSet).get(p) == toSet)
 
           case _ => 
-            jv.unsafeInsert(p, toSet) must throwA[RuntimeException]
+            // jv.unsafeInsert(p, toSet) must throwA[RuntimeException]
+            try { 
+              jv.unsafeInsert(p, toSet) 
+              false
+            } catch {  
+              case e: RuntimeException => true
+              case _ => false
+            }
         }
       }
     }
 
-    check(setProp) and check(insertProp)
+    check(setProp) 
+    check(insertProp)
   }
 
   private def reorderFields(json: JValue) = json mapUp {
