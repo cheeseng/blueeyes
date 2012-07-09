@@ -17,20 +17,21 @@
 package blueeyes {
 package json {
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
-object QueryExamples extends Specification {
+class QueryExamples extends WordSpec with MustMatchers {
   import JsonAST._
   import JsonParser._
 
   "List of IPs" in {
     val ips = for { JString(ip) <- json \\ "ip" } yield ip
-    ips mustEqual List("192.168.1.125", "192.168.1.126", "192.168.1.127", "192.168.2.125", "192.168.2.126")
+    ips must equal (List("192.168.1.125", "192.168.1.126", "192.168.1.127", "192.168.2.125", "192.168.2.126"))
   }
 
   "List of IPs converted to XML" in {
     val ips = <ips>{ for { JString(ip) <- json \\ "ip" } yield <ip>{ ip }</ip> }</ips>
-    ips mustEqual <ips><ip>192.168.1.125</ip><ip>192.168.1.126</ip><ip>192.168.1.127</ip><ip>192.168.2.125</ip><ip>192.168.2.126</ip></ips>
+    ips must equal (<ips><ip>192.168.1.125</ip><ip>192.168.1.126</ip><ip>192.168.1.127</ip><ip>192.168.2.125</ip><ip>192.168.2.126</ip></ips>)
   }
 
   "List of IPs in cluster2" in {
@@ -38,11 +39,11 @@ object QueryExamples extends Specification {
       cluster @ JObject(x) <- json \ "data_center"
       if (x contains JField("name", JString("cluster2")))
       JString(ip) <- cluster \\ "ip" } yield ip
-    ips mustEqual List("192.168.2.125", "192.168.2.126")
+    ips must equal (List("192.168.2.125", "192.168.2.126"))
   }
 
   "Total cpus in data center" in {
-    (for { JInt(x) <- json \\ "cpus" } yield x) reduceLeft (_ + _) mustEqual 40
+    (for { JInt(x) <- json \\ "cpus" } yield x) reduceLeft (_ + _) must equal (40)
   }
 
   "Servers sorted by uptime" in {
@@ -55,7 +56,7 @@ object QueryExamples extends Specification {
       JField("uptime", JInt(uptime)) <- server
     } yield Server(ip, uptime.longValue)
 
-    servers sortWith (_.uptime > _.uptime) mustEqual List(Server("192.168.1.127", 901214), Server("192.168.2.125", 453423), Server("192.168.2.126", 214312), Server("192.168.1.126", 189822), Server("192.168.1.125", 150123))
+    servers sortWith (_.uptime > _.uptime) must equal (List(Server("192.168.1.127", 901214), Server("192.168.2.125", 453423), Server("192.168.2.126", 214312), Server("192.168.1.126", 189822), Server("192.168.1.125", 150123)))
   }
 
   "Clusters administered by liza" in {
@@ -66,7 +67,7 @@ object QueryExamples extends Specification {
       JField("name", JString(name)) <- cluster
     } yield name
 
-    clusters mustEqual List("cluster2")
+    clusters must equal (List("cluster2"))
   }
 
   val json = parse("""
