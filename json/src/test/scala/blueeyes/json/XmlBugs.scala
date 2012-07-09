@@ -17,9 +17,10 @@
 package blueeyes {
 package json {
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
-object XmlBugs extends Specification {
+class XmlBugs extends WordSpec with MustMatchers {
   import JsonAST._
   import Printer._
   import Xml._
@@ -28,12 +29,12 @@ object XmlBugs extends Specification {
   "HarryH's XML parses correctly" in {
     val xml1 = <venue><id>123</id></venue>
     val xml2 = <venue> <id>{"1"}{"23"}</id> </venue>
-    Xml.toJson(xml1) must_== Xml.toJson(xml2)
+    Xml.toJson(xml1) must equal (Xml.toJson(xml2))
   }
 
   "HarryH's XML with attributes parses correctly" in {
     val json = toJson(<tips><group type="Nearby"><tip><id>10</id></tip></group></tips>)
-    Printer.compact(render(json)) mustEqual """{"tips":{"group":{"type":"Nearby","tip":{"id":"10"}}}}"""
+    Printer.compact(render(json)) must equal ("""{"tips":{"group":{"type":"Nearby","tip":{"id":"10"}}}}""")
   }
 
   "Jono's XML with attributes parses correctly" in {
@@ -43,8 +44,8 @@ object XmlBugs extends Specification {
     val example2 = <word term="example" self="http://localhost:8080/word/example" available="true"></word>
     val expected2 = """{"available":"true","term":"example","self":"http://localhost:8080/word/example"}"""
 
-    Printer.compact(render(toJson(example1))) mustEqual expected1
-    Printer.compact(render(toJson(example2))) mustEqual expected2
+    Printer.compact(render(toJson(example1))) must equal (expected1)
+    Printer.compact(render(toJson(example2))) must equal (expected2)
   }
 
   "Nodes with attributes converted to correct JSON" in {
@@ -54,14 +55,14 @@ object XmlBugs extends Specification {
         <n id="11" x="bcd" />
       </root>
     val expected = """{"root":{"n":[{"x":"abc","id":"10"},{"x":"bcd","id":"11"}]}}"""
-    Printer.compact(render(toJson(xml))) mustEqual expected
+    Printer.compact(render(toJson(xml))) must equal (expected)
   }
 
   "XML with empty node is converted correctly to JSON" in {
     val xml =
       <tips><group type="Foo"></group><group type="Bar"><tip><text>xxx</text></tip><tip><text>yyy</text></tip></group></tips> 
     val expected = """{"tips":{"group":[{"type":"Foo"},{"type":"Bar","tip":[{"text":"xxx"},{"text":"yyy"}]}]}}"""
-    Printer.compact(render(toJson(xml))) mustEqual expected
+    Printer.compact(render(toJson(xml))) must equal (expected)
   }
 }
 
