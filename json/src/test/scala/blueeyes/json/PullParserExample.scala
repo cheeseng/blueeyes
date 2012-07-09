@@ -1,8 +1,9 @@
 package blueeyes.json
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
-object PullParserExample extends Specification {
+class PullParserExample extends WordSpec with MustMatchers {
   import JsonParser._
 
   "Pull parsing example" in {
@@ -20,7 +21,7 @@ object PullParserExample extends Specification {
     }
 
     val postalCode = parse(json, parser)
-    postalCode mustEqual 10021
+    postalCode must equal (10021)
   }
 
   val json = """
