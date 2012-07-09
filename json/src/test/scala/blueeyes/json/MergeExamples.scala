@@ -17,15 +17,23 @@
 package blueeyes {
 package json {
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
+import MergeExamples._
 
-object MergeExamples extends Specification {
+class MergeExamples extends WordSpec with MustMatchers {
+  "Merge example" in {
+    (scala1 merge scala2) must equal (expectedMergeResult)
+  }
+
+  "Lotto example" in {
+    (lotto1 merge lotto2) must equal (mergedLottoResult)
+  }
+}
+
+object MergeExamples {
   import JsonAST._
   import JsonParser._
-
-  "Merge example" in {
-    (scala1 merge scala2) mustEqual expectedMergeResult
-  }
 
   val scala1 = parse("""
     {
@@ -61,10 +69,6 @@ object MergeExamples extends Specification {
       },
       "compiled": true,
     }""")
-
-  "Lotto example" in {
-    (lotto1 merge lotto2) mustEqual mergedLottoResult
-  }
 
   val lotto1 = parse("""
     {
