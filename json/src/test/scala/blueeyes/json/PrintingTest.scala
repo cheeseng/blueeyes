@@ -18,10 +18,11 @@ package blueeyes.json
 
 import org.scalacheck._
 import org.scalacheck.Prop.forAll
-import org.specs2.mutable.Specification
-import org.specs2.ScalaCheck
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
+import org.scalatest.prop.Checkers
 
-object PrintingSpec extends Specification with ArbitraryJValue with ScalaCheck {
+class PrintingSpec extends WordSpec with MustMatchers with ArbitraryJValue with Checkers {
   import JsonAST._
   import Printer._
   import scala.text.Document
