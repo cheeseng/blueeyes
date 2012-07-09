@@ -17,9 +17,10 @@
 package blueeyes {
 package json {
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
-object XmlExamples extends Specification {
+class XmlExamples extends WordSpec with MustMatchers {
   import JsonAST._
   import JsonDSL._
   import JsonParser.parse
@@ -28,14 +29,14 @@ object XmlExamples extends Specification {
 
   "Basic conversion example" in {
     val json = toJson(users1)
-    compact(render(json)) mustEqual """{"users":{"count":"2","user":[{"disabled":"true","id":"1","name":"Harry"},{"id":"2","name":"David","nickname":"Dave"}]}}"""
+    compact(render(json)) must equal ("""{"users":{"count":"2","user":[{"disabled":"true","id":"1","name":"Harry"},{"id":"2","name":"David","nickname":"Dave"}]}}""")
   }
 
   "Conversion transformation example 1" in {
     val json = toJson(users1).transform {
       case JField("id", JString(s)) => JField("id", JInt(s.toInt))
     }
-    compact(render(json)) mustEqual """{"users":{"count":"2","user":[{"disabled":"true","id":1,"name":"Harry"},{"id":2,"name":"David","nickname":"Dave"}]}}"""
+    compact(render(json)) must equal ("""{"users":{"count":"2","user":[{"disabled":"true","id":1,"name":"Harry"},{"id":2,"name":"David","nickname":"Dave"}]}}""")
   }
 
   "Conversion transformation example 2" in {
@@ -43,12 +44,12 @@ object XmlExamples extends Specification {
       case JField("id", JString(s)) => JField("id", JInt(s.toInt))
       case JField("user", x: JObject) => JField("user", JArray(x :: Nil))
     }
-    compact(render(json)) mustEqual """{"users":{"user":[{"id":1,"name":"Harry"}]}}"""
+    compact(render(json)) must equal ("""{"users":{"user":[{"id":1,"name":"Harry"}]}}""")
   }
 
   "Primitive array example" in {
     val xml = <chars><char>a</char><char>b</char><char>c</char></chars>
-    compact(render(toJson(xml))) mustEqual """{"chars":{"char":["a","b","c"]}}"""
+    compact(render(toJson(xml))) must equal ("""{"chars":{"char":["a","b","c"]}}""")
   }
 
   "Lotto example which flattens number arrays into encoded string arrays" in {
@@ -61,7 +62,7 @@ object XmlExamples extends Specification {
       case JField("numbers", JArray(nums)) => JField("numbers", flattenArray(nums))
     })
 
-    printer.format(xml(0)) mustEqual printer.format(
+    printer.format(xml(0)) must equal (printer.format(
       <lotto>
         <id>5</id>
         <winning-numbers>2,45,34,23,7,5,3</winning-numbers>
@@ -73,12 +74,12 @@ object XmlExamples extends Specification {
           <winner-id>54</winner-id>
           <numbers>52,3,12,11,18,22</numbers>
         </winners>
-      </lotto>)
+      </lotto>))
   }
 
   "Band example with namespaces" in {
     val json = toJson(band)
-    json mustEqual parse("""{
+    json must equal (parse("""{
   "b:band":{
     "name":"The Fall",
     "genre":"rock",
@@ -93,7 +94,7 @@ object XmlExamples extends Specification {
       }]
     }
   }
-}""")
+}"""))
   }
 
   val band =
@@ -115,7 +116,7 @@ object XmlExamples extends Specification {
 
   "Grouped text example" in {
     val json = toJson(groupedText)
-    compact(render(json)) mustEqual """{"g":{"group":"foobar","url":"http://example.com/test"}}"""
+    compact(render(json)) must equal ("""{"g":{"group":"foobar","url":"http://example.com/test"}}""")
   }
 
   val users1 =
@@ -161,13 +162,13 @@ object XmlExamples extends Specification {
     val a1 = attrToObject("stats", "count", s => JInt(s.value.toInt)) _
     val a2 = attrToObject("messages", "href", identity) _
     val json = a1(a2(toJson(messageXml1)))
-    compact(render(json)) mustEqual expected1
+    compact(render(json)) must equal (expected1)
   }
 
   "Example with one attribute, one nested element " in {
     val a = attrToObject("stats", "count", s => JInt(s.value.toInt)) _
-    compact(render(a(toJson(messageXml2)))) mustEqual expected2
-    compact(render(a(toJson(messageXml3)))) mustEqual expected2
+    compact(render(a(toJson(messageXml2)))) must equal (expected2)
+    compact(render(a(toJson(messageXml3)))) must equal (expected2)
   }
 
   val messageXml1 =
