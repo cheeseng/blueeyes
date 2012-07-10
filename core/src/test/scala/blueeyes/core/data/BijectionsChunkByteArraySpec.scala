@@ -1,11 +1,12 @@
 package blueeyes.core.data
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import blueeyes.json.JsonAST._
-import blueeyes.concurrent.test.FutureMatchers
+import blueeyes.concurrent.test.AkkaFutures
 import akka.dispatch.Future
 
-class BijectionsChunkByteArraySpec extends Specification with BijectionsByteArray with BijectionsChunkByteArray with blueeyes.bkka.AkkaDefaults with FutureMatchers {
+class BijectionsChunkByteArraySpec extends WordSpec with MustMatchers with BijectionsByteArray with BijectionsChunkByteArray with blueeyes.bkka.AkkaDefaults with AkkaFutures {
   private val jObject1 = JObject(List(JField("foo", JString("bar"))))
   private val jObject2 = JObject(List(JField("bar", JString("foo"))))
   private val bijection = chunksToChunksArrayByte[JValue]
@@ -15,10 +16,10 @@ class BijectionsChunkByteArraySpec extends Specification with BijectionsByteArra
       val chunks     = Chunk(jObject1, Some(Future[Chunk[JValue]](Chunk(jObject2))))
       val bytesChunk = bijection(chunks)
 
-      ByteArrayToJValue(bytesChunk.data) mustEqual(jObject1)
+      ByteArrayToJValue(bytesChunk.data) must equal (jObject1)
 
-      bytesChunk.next.get must whenDelivered {
-        (chunk: ByteChunk) => ByteArrayToJValue(chunk.data) mustEqual(jObject2)
+      whenReady(bytesChunk.next.get) { chunk => 
+        ByteArrayToJValue(chunk.data) must equal (jObject2)
       }
     }
 
@@ -26,8 +27,10 @@ class BijectionsChunkByteArraySpec extends Specification with BijectionsByteArra
       val chunks     = Chunk(JValueToByteArray(jObject1), Some(Future[ByteChunk](Chunk(JValueToByteArray(jObject2)))))
       val bytesChunk = bijection.unapply(chunks)
 
-      bytesChunk.data mustEqual(jObject1)
-      bytesChunk.next.get.map(_.data) must whenDelivered (be_==(jObject2))
+      bytesChunk.data must equal (jObject1)
+      whenReady(bytesChunk.next.get.map(_.data)) { result => 
+        result must be (jObject2)
+      }
     }
   }
 }
