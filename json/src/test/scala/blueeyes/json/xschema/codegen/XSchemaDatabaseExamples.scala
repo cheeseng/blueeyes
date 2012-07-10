@@ -1,10 +1,11 @@
 package blueeyes.json.xschema.codegen {
 
-import _root_.org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
 import java.io.{Writer, PrintWriter}
 
-object XSchemaDatabaseExamples extends Specification {
+class XSchemaDatabaseExamples extends WordSpec with MustMatchers {
   import _root_.blueeyes.json.JsonAST._
   import _root_.blueeyes.json.JsonParser._
   import _root_.blueeyes.json.xschema._
@@ -18,9 +19,9 @@ object XSchemaDatabaseExamples extends Specification {
     
     val commonFields = db.commonFieldsOf(coproduct)
     
-    commonFields.length mustEqual 1
-    commonFields.head._1 mustEqual "text"
-    commonFields.head._2 mustEqual XString
+    commonFields.length must equal (1)
+    commonFields.head._1 must equal ("text")
+    commonFields.head._2 must equal (XString)
   }
   
   "Common coproduct fields in products of a coproduct are identified" in {
@@ -30,9 +31,9 @@ object XSchemaDatabaseExamples extends Specification {
     
     val commonFields = db.commonFieldsOf(employee)
     
-    commonFields.length mustEqual 1
-    commonFields.head._1 mustEqual "id"
-    commonFields.head._2 mustEqual XDefinitionRef("SSN", "data.employee")
+    commonFields.length must equal (1)
+    commonFields.head._1 must equal ("id")
+    commonFields.head._2 must equal (XDefinitionRef("SSN", "data.employee"))
   }
 }
 
