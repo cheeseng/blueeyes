@@ -16,10 +16,11 @@
 
 package blueeyes.json
 
-import org.specs2.mutable.Specification
-import org.specs2.ScalaCheck
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
+import org.scalatest.prop.Checkers
 
-object XmlSpec extends Specification with ArbitraryXml with ArbitraryJValue with ScalaCheck {
+class XmlSpec extends WordSpec with MustMatchers with ArbitraryXml with ArbitraryJValue with Checkers {
   import Xml._
   import JsonAST._
   import Printer._
