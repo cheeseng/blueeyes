@@ -15,47 +15,48 @@
  */
 package blueeyes.json.xschema {
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
-object DefaultSerializationExamples extends Specification {
+class DefaultSerializationExamples extends WordSpec with MustMatchers {
   import _root_.blueeyes.json.JsonAST._
   
   import DefaultSerialization._
   
   "Primitives can be extracted from strings" in {
-    IntExtractor(JString("12")) mustEqual 12
-    LongExtractor(JString("12")) mustEqual 12    
-    FloatExtractor(JString("12.5")) mustEqual 12.5F
-    DoubleExtractor(JString("12.5")) mustEqual 12.5
-    BooleanExtractor(JString("true")) mustEqual true
-    BooleanExtractor(JString("false")) mustEqual false
-    BooleanExtractor(JString("0")) mustEqual false
-    BooleanExtractor(JString("1")) mustEqual true
+    IntExtractor(JString("12")) must equal (12)
+    LongExtractor(JString("12")) must equal (12)    
+    FloatExtractor(JString("12.5")) must equal (12.5F)
+    DoubleExtractor(JString("12.5")) must equal (12.5)
+    BooleanExtractor(JString("true")) must equal (true)
+    BooleanExtractor(JString("false")) must equal (false)
+    BooleanExtractor(JString("0")) must equal (false)
+    BooleanExtractor(JString("1")) must equal (true)
   }
   
   "Reals can be extracted from integers" in {
-    FloatExtractor(JInt(12)) mustEqual 12.0F
-    DoubleExtractor(JInt(12)) mustEqual 12.0
+    FloatExtractor(JInt(12)) must equal (12.0F)
+    DoubleExtractor(JInt(12)) must equal (12.0)
   }
   
   "Booleans can be extracted from integers" in {
-    BooleanExtractor(JInt(0)) mustEqual false
-    BooleanExtractor(JInt(1)) mustEqual true
+    BooleanExtractor(JInt(0)) must equal (false)
+    BooleanExtractor(JInt(1)) must equal (true)
   }
   
   "Integers can be extracted from reals" in {
-    IntExtractor(JDouble(12.0)) mustEqual 12
-    LongExtractor(JDouble(12.0)) mustEqual 12L
+    IntExtractor(JDouble(12.0)) must equal (12)
+    LongExtractor(JDouble(12.0)) must equal (12L)
   }
   
   "Map of String to something is decomposed to object" in {
     val map = Map("foo" -> "bar")
     
-    StringMapDecomposer(StringDecomposer).decompose(map) mustEqual JObject(JField("foo", JString("bar")) :: Nil)
+    StringMapDecomposer(StringDecomposer).decompose(map) must equal (JObject(JField("foo", JString("bar")) :: Nil))
   }
   
   "Map of String to something can be extracted from object" in {
-    StringMapExtractor(StringExtractor).extract(JObject(JField("foo", JString("bar")) :: Nil)) mustEqual Map("foo" -> "bar")
+    StringMapExtractor(StringExtractor).extract(JObject(JField("foo", JString("bar")) :: Nil)) must equal (Map("foo" -> "bar"))
   }
   
   "Order of elements in List is not changed" in {
@@ -63,7 +64,7 @@ object DefaultSerializationExamples extends Specification {
     
     val s = ListDecomposer(IntDecomposer).decompose(l)
     
-    ListExtractor(IntExtractor).extract(s) mustEqual l
+    ListExtractor(IntExtractor).extract(s) must equal (l)
   }
   
   "Order of elements in Array is not changed" in {
@@ -71,7 +72,7 @@ object DefaultSerializationExamples extends Specification {
     
     val s = ArrayDecomposer(IntDecomposer).decompose(l)
     
-    ArrayExtractor(scala.reflect.ClassManifest.Int, IntExtractor).extract(s).toList mustEqual l.toList
+    ArrayExtractor(scala.reflect.ClassManifest.Int, IntExtractor).extract(s).toList must equal (l.toList)
   }
 }
 
