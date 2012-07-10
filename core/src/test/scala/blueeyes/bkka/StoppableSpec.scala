@@ -1,6 +1,7 @@
 package blueeyes.bkka
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import akka.actor.Actor
 import akka.actor.ActorSystem
 import akka.actor.Props
@@ -13,7 +14,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 
-class StoppableSpec extends Specification with AkkaDefaults {
+class StoppableSpec extends WordSpec with MustMatchers with AkkaDefaults {
   val actorSystem = ActorSystem("stoppable-spec")
   implicit val timeout = Timeout(1000)
   val random = new scala.util.Random
@@ -45,7 +46,7 @@ class StoppableSpec extends Specification with AkkaDefaults {
         Stoppable(a2, Stoppable(b2a) :: Nil) :: Nil
       )
 
-      Await.result(Stoppable.stop(stoppable), timeout.duration) must_== List("r", "a1", "a2", "b1a", "b1b", "b2a")
+      Await.result(Stoppable.stop(stoppable), timeout.duration) must equal (List("r", "a1", "a2", "b1a", "b1b", "b2a"))
     }
   }
 }
