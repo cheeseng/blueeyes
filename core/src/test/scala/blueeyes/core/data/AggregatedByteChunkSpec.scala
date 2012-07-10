@@ -12,15 +12,11 @@ class AggregatedByteChunkSpec extends WordSpec with MustMatchers with AkkaDefaul
   "AggregatedByteChunk" should {
     "aggregate full content when size is not specified" in{
       val chunk = Chunk(Array[Byte]('1', '2'), Some(Future(Chunk(Array[Byte]('3', '4')))))
-      whenReady(AggregatedByteChunk(chunk, None).map(v => new String(v.data))) { result => 
-        result must be ("1234")
-      }
+      AggregatedByteChunk(chunk, None).map(v => new String(v.data)).futureValue must be ("1234")
     }
     "aggregate content up to the specified size" in{
       val chunk = Chunk(Array[Byte]('1', '2'), Some(Future(Chunk(Array[Byte]('3', '4')))))
-      whenReady(AggregatedByteChunk(chunk, Some(2.bytes)).map(v => new String(v.data))) { result => 
-        result must be ("12")
-      }
+      AggregatedByteChunk(chunk, Some(2.bytes)).map(v => new String(v.data)).futureValue must be ("12")
     }
   }
 }
