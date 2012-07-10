@@ -71,4 +71,14 @@ trait FutureMatchers extends AkkaConversions {
       }
     }
   }
-}}
+}
+
+import org.scalatest.time.Span
+import org.scalatest.time.Millis
+
+trait AkkaFutures extends org.scalatest.akka.AkkaFutures {
+  implicit val defaultPatience =
+    PatienceConfig(timeout =  Span(1000, Millis), interval = Span(100, Millis))
+}
+
+}
