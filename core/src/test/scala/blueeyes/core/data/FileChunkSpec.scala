@@ -1,16 +1,17 @@
 package blueeyes.core.data
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
+import org.scalatest.BeforeAndAfter
 import java.io.File
 import akka.dispatch.Future
 import akka.dispatch.Promise
 import akka.dispatch.Await
 import akka.util.Duration
 import blueeyes.bkka.AkkaDefaults
-import blueeyes.concurrent.test.FutureMatchers
+import blueeyes.concurrent.test.AkkaFutures
 import collection.mutable.ArrayBuilder.ofByte
-import org.specs2.specification.{AfterExample, BeforeAfterExample}
-
+import akka.util.duration._
 
 trait Data extends AkkaDefaults {
   val dataFile = new File(System.getProperty("java.io.tmpdir") + File.separator + System.currentTimeMillis)
@@ -20,35 +21,33 @@ trait Data extends AkkaDefaults {
                  }
 }
 
-class FileSinkSpec extends Specification with Data with BeforeAfterExample with AkkaDefaults with FutureMatchers {
-  override def is = args(sequential = true) ^ super.is
+class FileSinkSpec extends WordSpec with MustMatchers with Data with BeforeAndAfter with AkkaDefaults with AkkaFutures {
 
   "FileSink" should {
     "write data" in{
-      FileSink.write(dataFile, chunk) must whenDelivered {
-        (_: Unit) => {
-          (dataFile.exists must_==(true)) and 
-          (dataFile.length mustEqual(data.flatten.length))
-        }
-      }
+      FileSink.write(dataFile, chunk).futureValue
+      dataFile.exists must equal (true) 
+      dataFile.length must equal (data.flatten.length)
     }
 
     "cancel result when write failed" in{
       val error  = new RuntimeException
       val result = FileSink.write(dataFile, Chunk(data.head.toArray, Some(Future(throw error))))
 
-      result.failed must whenDelivered {
-        (err: Throwable) => (err must_== error) and (dataFile.exists must_== true) and (dataFile.length must_== data.head.toArray.length)
-      }
+      val err = intercept[RuntimeException] { result.futureValue }
+      err.getCause must be theSameInstanceAs error
+      dataFile.exists must equal (true)
+      dataFile.length must equal (data.head.toArray.length)
     }
 
     "cancel result when write getting next chunk failed" in{
       val error  = new RuntimeException
       val result = FileSink.write(dataFile, Chunk(data.head.toArray, Some(Promise.failed[ByteChunk](error))))
 
-      result.failed must whenDelivered {
-        (err: Throwable) => (err must_== error) and (dataFile.exists must_== true) and (dataFile.length must_== data.head.toArray.length)
-      }
+      val err = intercept[RuntimeException] { result.futureValue }
+      err.getCause must be theSameInstanceAs error
+      dataFile.exists must equal (true)
+      dataFile.length must equal (data.head.toArray.length)
     }
 
     "cancel writing when result is canceled" in{
@@ -62,18 +61,18 @@ class FileSinkSpec extends Specification with Data with BeforeAfterExample with 
         promise.success(Chunk(data.head.toArray))
       }
 
-      promise.failed must whenDelivered {
-        (err: Throwable) => (err must_== killed) and (dataFile.exists must_== true) and (dataFile.length must_== data.head.toArray.length)
-      }
+      val err = intercept[RuntimeException] { promise.futureValue }
+      err.getCause must be theSameInstanceAs killed
+      dataFile.exists must equal (true)
+      dataFile.length must equal (data.head.toArray.length)
     }
   }
 
-  protected def before = dataFile.delete
-
-  protected def after = dataFile.delete
+  before { dataFile.delete }
+  after { dataFile.delete }
 }
 
-class FileSourceSpec extends Specification with Data with AfterExample with AkkaDefaults with FutureMatchers {
+class FileSourceSpec extends WordSpec with MustMatchers with Data with BeforeAndAfter with AkkaDefaults with AkkaFutures {
 
   "FileSource" should {
     "read all data" in{
@@ -88,13 +87,13 @@ class FileSourceSpec extends Specification with Data with AfterExample with Akka
       }
 
       val result = FileSink.write(dataFile, chunk)
-      result must whenDelivered (be_==(()))
+      result.futureValue must be (())
 
       val fileChunks = FileSource(dataFile)
 
-      new String(readContent(chunk, new ofByte()).result) mustEqual(new String(data.flatten.toArray))
+      new String(readContent(chunk, new ofByte()).result) must equal (new String(data.flatten.toArray))
     }
   }
 
-  protected def after = dataFile.delete
+  after { dataFile.delete }
 }
