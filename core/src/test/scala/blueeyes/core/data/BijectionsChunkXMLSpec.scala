@@ -1,15 +1,18 @@
 package blueeyes.core.data
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import Bijection._
 
-class BijectionsChunkXMLSpec extends Specification with BijectionsChunkXML with BijectionsByteArray{
+class BijectionsChunkXMLSpec extends WordSpec with MustMatchers with BijectionsChunkXML with BijectionsByteArray{
   "BijectionsChunkXML" should{
     "parser valid XML" in{
-      XMLToChunk.unapply(Chunk(XMLToByteArray(<f></f>))) mustEqual(<f></f>)
+      XMLToChunk.unapply(Chunk(XMLToByteArray(<f></f>))) must equal (<f></f>)
     }
     "throw error when XML is incomplete" in{
-      XMLToChunk.unapply(Chunk((XMLToByteArray(<f></f>).tail))) must throwA[RuntimeException]
+      intercept[RuntimeException] {
+        XMLToChunk.unapply(Chunk((XMLToByteArray(<f></f>).tail)))
+      }
     }
   }
 }
