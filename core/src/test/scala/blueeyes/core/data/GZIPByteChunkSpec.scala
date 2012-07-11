@@ -1,13 +1,14 @@
 package blueeyes.core.data
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import java.util.zip.GZIPInputStream
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import akka.dispatch.Future
 import blueeyes.bkka.AkkaDefaults
-import blueeyes.concurrent.test.FutureMatchers
+import blueeyes.concurrent.test.AkkaFutures
 
-class GZIPByteChunkSpec extends Specification with FutureMatchers with AkkaDefaults {
+class GZIPByteChunkSpec extends WordSpec with MustMatchers with AkkaFutures with AkkaDefaults {
   "GZICompressedByteChunk" should{
     "compress one chunk" in{
       testCompressed(Chunk("foo".getBytes), "foo")
@@ -21,9 +22,10 @@ class GZIPByteChunkSpec extends Specification with FutureMatchers with AkkaDefau
     val compressed = GZIPByteChunk(chunk)
     val future     = AggregatedByteChunk(compressed, None)
 
-    future.map(v => new String(decompress(v))) must whenDelivered {
+    future.map(v => new String(decompress(v))).futureValue must equal (data)
+    /*future.map(v => new String(decompress(v))) must whenDelivered {
       be_==(data)
-    }
+    }*/
   }
 
   private def decompress(chunk: ByteChunk) = {
