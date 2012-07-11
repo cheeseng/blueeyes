@@ -1,19 +1,20 @@
 package blueeyes.core.data
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
-class BijectionSpec extends Specification{
+class BijectionSpec extends WordSpec with MustMatchers {
   "Bijection.identity: creates Bijection which does not change data" in{
-    Bijection.identity[String]("foo")         mustEqual ("foo")
-    Bijection.identity[String].unapply("foo") mustEqual ("foo")
+    Bijection.identity[String]("foo")         must equal ("foo")
+    Bijection.identity[String].unapply("foo") must equal ("foo")
   }
   "Bijection.inverse: creates inverse Bijection" in{
     val inversed = BijectionsByteArray.ByteArrayToString.inverse
-    inversed.unapply(Array[Byte]('f', 'o', 'o'))  mustEqual("foo")
-    inversed("foo").toList                        mustEqual(List[Byte]('f', 'o', 'o'))
+    inversed.unapply(Array[Byte]('f', 'o', 'o'))  must equal ("foo")
+    inversed("foo").toList                        must equal (List[Byte]('f', 'o', 'o'))
   }
   "Bijection.compose: creates composed Bijection" in{
     val composed = BijectionsChunkString.StringToChunk.andThen(BijectionsChunkByteArray.ChunkToArrayByte)
-    composed("foo").toList mustEqual(List[Byte]('f', 'o', 'o'))
+    composed("foo").toList must equal (List[Byte]('f', 'o', 'o'))
   }
 }
