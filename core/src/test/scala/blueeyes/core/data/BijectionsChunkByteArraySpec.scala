@@ -17,10 +17,7 @@ class BijectionsChunkByteArraySpec extends WordSpec with MustMatchers with Bijec
       val bytesChunk = bijection(chunks)
 
       ByteArrayToJValue(bytesChunk.data) must equal (jObject1)
-
-      whenReady(bytesChunk.next.get) { chunk => 
-        ByteArrayToJValue(chunk.data) must equal (jObject2)
-      }
+      ByteArrayToJValue(bytesChunk.next.get.futureValue.data) must equal (jObject2)
     }
 
     "convert bytes chunk to chunk" in{
@@ -28,9 +25,7 @@ class BijectionsChunkByteArraySpec extends WordSpec with MustMatchers with Bijec
       val bytesChunk = bijection.unapply(chunks)
 
       bytesChunk.data must equal (jObject1)
-      whenReady(bytesChunk.next.get.map(_.data)) { result => 
-        result must be (jObject2)
-      }
+      bytesChunk.next.get.map(_.data).futureValue must be (jObject2)
     }
   }
 }
