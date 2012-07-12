@@ -1,20 +1,21 @@
 package blueeyes.core.http
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import Encodings._
 
-class EncodingSpec extends Specification{
+class EncodingSpec extends WordSpec with MustMatchers {
 
   "Encodings:  Should produce a encoding" in {
-    Encodings.parseEncodings("compress") mustEqual List(compress)
+    Encodings.parseEncodings("compress") must equal (List(compress))
   }
 
   "Encodings:  Should produce list of encodings" in {
-    Encodings.parseEncodings("x-compress, *") mustEqual List(`x-compress`, `*`)
+    Encodings.parseEncodings("x-compress, *") must equal (List(`x-compress`, `*`))
   }
 
   "Encodings:  Should produce custom encodings" in {
-    Encodings.parseEncodings("customa, customb") mustEqual List(CustomEncoding("customa"), CustomEncoding("customb"))
+    Encodings.parseEncodings("customa, customb") must equal (List(CustomEncoding("customa"), CustomEncoding("customb")))
   }
 }
 
