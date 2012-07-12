@@ -1,18 +1,19 @@
 package blueeyes.core.http
 
-import org.specs2.mutable.Specification
-import org.specs2.ScalaCheck
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
+import org.scalatest.prop.Checkers
 import org.scalacheck._
 import org.scalacheck.Prop.forAll
 
-class URISpec extends Specification with URIGen with ScalaCheck{
+class URISpec extends WordSpec with MustMatchers with URIGen with Checkers {
   "URL.toString" should{
-    "be created using scheme" in {URI(Some("foo"), None, None, None, None, None, None).toString mustEqual("foo:")}
-    "be created using scheme, userinfo and host" in {URI(Some("foo"), Some("john:smith"), Some("google"), None, None, None, None).toString mustEqual("foo://john:smith@google")}
-    "be created using scheme, userinfo host and port" in {URI(Some("foo"), Some("john:smith"), Some("google"), Some(8080), None, None, None).toString mustEqual("foo://john:smith@google:8080")}
-    "be created using scheme, userinfo host, port and path" in {URI(Some("foo"), Some("john:smith"), Some("google"), Some(8080), Some("/bar"), None, None).toString mustEqual("foo://john:smith@google:8080/bar")}
-    "be created using scheme, userinfo host, port, path and query" in {URI(Some("foo"), Some("john:smith"), Some("google"), Some(8080), Some("/bar"), Some("query=value"), None).toString mustEqual("foo://john:smith@google:8080/bar?query=value")}
-    "be created using scheme, userinfo host, port, path, query and fragment" in {URI(Some("foo"), Some("john:smith"), Some("google"), Some(8080), Some("/bar"), Some("query=value"), Some("fragment")).toString mustEqual("foo://john:smith@google:8080/bar?query=value#fragment")}
+    "be created using scheme" in {URI(Some("foo"), None, None, None, None, None, None).toString must equal ("foo:")}
+    "be created using scheme, userinfo and host" in {URI(Some("foo"), Some("john:smith"), Some("google"), None, None, None, None).toString must equal ("foo://john:smith@google")}
+    "be created using scheme, userinfo host and port" in {URI(Some("foo"), Some("john:smith"), Some("google"), Some(8080), None, None, None).toString must equal ("foo://john:smith@google:8080")}
+    "be created using scheme, userinfo host, port and path" in {URI(Some("foo"), Some("john:smith"), Some("google"), Some(8080), Some("/bar"), None, None).toString must equal ("foo://john:smith@google:8080/bar")}
+    "be created using scheme, userinfo host, port, path and query" in {URI(Some("foo"), Some("john:smith"), Some("google"), Some(8080), Some("/bar"), Some("query=value"), None).toString must equal ("foo://john:smith@google:8080/bar?query=value")}
+    "be created using scheme, userinfo host, port, path, query and fragment" in {URI(Some("foo"), Some("john:smith"), Some("google"), Some(8080), Some("/bar"), Some("query=value"), Some("fragment")).toString must equal ("foo://john:smith@google:8080/bar?query=value#fragment")}
   }
 
   "URI" should{
