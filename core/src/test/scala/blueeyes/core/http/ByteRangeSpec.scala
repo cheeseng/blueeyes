@@ -1,15 +1,16 @@
 package blueeyes.core.http
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
-class ByteRangeSpec extends Specification{
+class ByteRangeSpec extends WordSpec with MustMatchers {
 
   "Range: Should parse correctly on good input" in {
-    HttpHeaders.Range(ByteRanges.parseByteRanges("bytes=0-500, 699-2000, -4").get).value mustEqual "bytes=0-500, 699-2000, -4"
+    HttpHeaders.Range(ByteRanges.parseByteRanges("bytes=0-500, 699-2000, -4").get).value must equal ("bytes=0-500, 699-2000, -4")
   }
 
   "Range: Should produce none on bad input" in {
-    ByteRanges.parseByteRanges("bytes=cats") mustEqual None
-    ByteRanges.parseByteRanges("bytes=1-29, cats").get.toString mustEqual "bytes=1-29"
+    ByteRanges.parseByteRanges("bytes=cats") must equal (None)
+    ByteRanges.parseByteRanges("bytes=1-29, cats").get.toString must equal ("bytes=1-29")
   }
 }
