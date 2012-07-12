@@ -23,12 +23,6 @@ class HttpResponseHelpersSpec extends WordSpec with MustMatchers with HttpRespon
           c must be (Some(content))
       case other => fail("Expected HttpResponse, but got: " + other)
     }
-    /*respond(HttpStatus(statusCode), headers, Some(content)) must whenDelivered {
-      beLike {
-        case HttpResponse(HttpStatus(code, _), HttpHeaders(h), c, _) => 
-          (code must_== statusCode) and (h must_== headers) and (c must beSome(content))
-      }
-    }*/
   }
 
   "HttpResponseHelpers respondLater: creates Future when response is OK" in {
@@ -42,19 +36,12 @@ class HttpResponseHelpersSpec extends WordSpec with MustMatchers with HttpRespon
         c must be (Some(content))
       case other => fail("Expected HttpResponse, but got: " + other)
     }
-    /*respondLater[String](Future(content), headers) must whenDelivered {
-      beLike { 
-        case HttpResponse(HttpStatus(code, _), HttpHeaders(h), c, _) => 
-          (code must_== OK) and (h must_== headers) and (c must beSome(content))
-      }
-    }*/
   }
 
   "HttpResponseHelpers respondLater: creates Future when response is error (Future is cancelled with error)" in {
     val error   = new NullPointerException()
     val promise = Promise.failed[String](error)
     respondWithCode(respondLater[String](promise), InternalServerError)
-    //respondLater[String](promise) must respondWithCode(InternalServerError)
   }
 
   "HttpResponseHelpers respondLater: creates Future when response is error (Future is cancelled without error)" in {
@@ -62,6 +49,5 @@ class HttpResponseHelpersSpec extends WordSpec with MustMatchers with HttpRespon
     val promise = Promise[String]
     promise.failure(new RuntimeException())
     respondWithCode(respondLater[String](promise), InternalServerError)
-    //respondLater[String](promise) must respondWithCode(InternalServerError)
   }
 }
