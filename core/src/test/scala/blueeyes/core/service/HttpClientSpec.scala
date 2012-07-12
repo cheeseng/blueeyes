@@ -1,15 +1,14 @@
 package blueeyes.core.service
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import blueeyes.core.http._
 import blueeyes.core.data.BijectionsByteArray
 import akka.dispatch.Future
 import java.net.InetAddress
 import org.jboss.netty.handler.codec.http.CookieEncoder
 
-class HttpClientSpec extends Specification with BijectionsByteArray with blueeyes.bkka.AkkaDefaults {
-
-  override def is = args(sequential = true) ^ super.is
+class HttpClientSpec extends WordSpec with MustMatchers with BijectionsByteArray with blueeyes.bkka.AkkaDefaults {
 
   private val initialRequest = HttpRequest[String](HttpMethods.GET, "/baz")
 
@@ -54,6 +53,6 @@ class HttpClientSpec extends Specification with BijectionsByteArray with blueeye
   private def makeTest(expectation: HttpRequest[String], uri: URI = initialRequest.uri, method: HttpMethod = initialRequest.method)(builder: (HttpClient[String]) => HttpClient[String]) = {
     builder(mockClient).custom(method, uri.toString)
 
-    mockClient.request.get mustEqual(expectation)
+    mockClient.request.get must equal (expectation)
   }
 }
