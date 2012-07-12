@@ -1,29 +1,34 @@
 package blueeyes.core.service
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import akka.dispatch.Future
 import blueeyes.core.http._
-import blueeyes.core.http.test.HttpRequestMatchers
+import blueeyes.core.http.test.HttpRequestCheckers
 import blueeyes.core.data.{Chunk, ByteChunk}
 import blueeyes.util.metrics.DataSize
 import DataSize._
+import blueeyes.core.http.HttpStatusCodes._
 
-class HttpClientByteChunkSpec extends Specification with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
+class HttpClientByteChunkSpec extends WordSpec with MustMatchers with blueeyes.bkka.AkkaDefaults with HttpRequestCheckers {
   "HttpClientByteChunk" should {
     "aggregate full content when size is not specified" in{
       val future = client(Chunk(Array[Byte]('1', '2'), Some(Future(Chunk(Array[Byte]('3', '4')))))).aggregate(None).get("foo")
-
-      future must succeedWithContent {
+      respondWithCode(future, OK)
+      new String(future.futureValue.content.get.data) must equal ("1234")
+      //succeedWithContent(future, "1234")
+      /*future must succeedWithContent {
         (v: ByteChunk) => new String(v.data) must_== "1234"
-      }
+      }*/
     }
 
     "aggregate content up to the specified size" in{
       val future = client(Chunk(Array[Byte]('1', '2'), Some(Future(Chunk(Array[Byte]('3', '4')))))).aggregate(Some(2.bytes)).get("foo")
-
-      future must succeedWithContent {
+      respondWithCode(future, OK)
+      new String(future.futureValue.content.get.data) must equal ("12")
+      /*future must succeedWithContent {
         (v: ByteChunk) => new String(v.data) must_== "12"
-      }
+      }*/
     }
   }
 
