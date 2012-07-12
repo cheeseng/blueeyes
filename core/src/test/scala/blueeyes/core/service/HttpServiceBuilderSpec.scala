@@ -1,20 +1,25 @@
 package blueeyes.core.service
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import akka.dispatch.Future
 import akka.dispatch.Future._
-import org.specs2.mock._
+import org.mockito.Mockito._
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.concurrent.Eventually
+import akka.util.Duration
+import java.util.concurrent.TimeUnit._
 
-class HttpServiceBuilderSpec extends Specification with Mockito{
+class HttpServiceBuilderSpec extends WordSpec with MustMatchers with MockitoSugar with Eventually {
   "ServiceBuilder startup: creates StartupDescriptor with specified startup function" in{
     var executed = false
     val builder  = new ServiceBuilder[Unit]{
       val descriptor = startup(Future(executed = true))
     }
 
-    builder.descriptor.startup()
+    val f = builder.descriptor.startup()
 
-    executed must be_==(true)
+    eventually { executed must be (true) }
   }
 
   "ServiceBuilder startup: creates StartupDescriptor with specified request function" in{
@@ -24,8 +29,7 @@ class HttpServiceBuilderSpec extends Specification with Mockito{
     }
 
     builder.descriptor.request()
-
-    there was one(builder.descriptor.request).apply(())
+    verify(builder.descriptor.request, times(1)).apply(())
   }
 
   "ServiceBuilder shutdown: creates StartupDescriptor with specified shutdown function" in{
@@ -40,6 +44,6 @@ class HttpServiceBuilderSpec extends Specification with Mockito{
 
     builder.descriptor.shutdown()
 
-    shutdownCalled must eventually(be_==(true))
+    eventually { shutdownCalled must be (true) }
   }
 }
