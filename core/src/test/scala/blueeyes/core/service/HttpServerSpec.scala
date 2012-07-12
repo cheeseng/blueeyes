@@ -16,8 +16,9 @@ import org.streum.configrity.io.BlockFormat
 
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
+import org.scalatest.concurrent.Eventually
 
-class HttpServerSpec extends WordSpec with MustMatchers with BijectionsChunkString with HttpRequestCheckers {
+class HttpServerSpec extends WordSpec with MustMatchers with BijectionsChunkString with HttpRequestCheckers with Eventually {
   val config = Configuration.parse("", BlockFormat)
   val timeout = Duration(10, SECONDS)
   val server = new TestServer(config) ->- { s => Await.result(s.start, timeout) }
@@ -59,7 +60,7 @@ class HttpServerSpec extends WordSpec with MustMatchers with BijectionsChunkStri
       val f = server.stop
       Await.result(f, timeout)
       server.shutdownCalled must be (true)
-      server.status must be (RunningStatus.Stopped)
+      eventually { server.status must be (RunningStatus.Stopped) }
     }
   }  
 }
