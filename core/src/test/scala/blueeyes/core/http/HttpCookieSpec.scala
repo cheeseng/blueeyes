@@ -1,9 +1,10 @@
 package blueeyes.core.http
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import HttpCookies._
 
-class HttpCookieSpec extends Specification{
+class HttpCookieSpec extends WordSpec with MustMatchers {
 
   "HttpCookies: Should parse simple cookies" in{
     check("Cat=Mittens", CookieData("Cat", "Mittens"))
@@ -35,8 +36,8 @@ class HttpCookieSpec extends Specification{
   }
 
   private def check(cookieStr: String, cookie: HttpCookie*) = {
-    CookiesPattern.isDefinedAt(cookieStr)  must be_==(true)
-    CookiesPattern.apply(cookieStr)        mustEqual(List(cookie: _*))
+    CookiesPattern.isDefinedAt(cookieStr)  must be (true)
+    CookiesPattern.apply(cookieStr)        must equal (List(cookie: _*))
   }
 }
 
