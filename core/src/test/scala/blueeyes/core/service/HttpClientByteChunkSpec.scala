@@ -16,19 +16,12 @@ class HttpClientByteChunkSpec extends WordSpec with MustMatchers with blueeyes.b
       val future = client(Chunk(Array[Byte]('1', '2'), Some(Future(Chunk(Array[Byte]('3', '4')))))).aggregate(None).get("foo")
       respondWithCode(future, OK)
       new String(future.futureValue.content.get.data) must equal ("1234")
-      //succeedWithContent(future, "1234")
-      /*future must succeedWithContent {
-        (v: ByteChunk) => new String(v.data) must_== "1234"
-      }*/
     }
 
     "aggregate content up to the specified size" in{
       val future = client(Chunk(Array[Byte]('1', '2'), Some(Future(Chunk(Array[Byte]('3', '4')))))).aggregate(Some(2.bytes)).get("foo")
       respondWithCode(future, OK)
       new String(future.futureValue.content.get.data) must equal ("12")
-      /*future must succeedWithContent {
-        (v: ByteChunk) => new String(v.data) must_== "12"
-      }*/
     }
   }
 
