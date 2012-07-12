@@ -4,17 +4,17 @@ import blueeyes.json.JsonAST._
 import blueeyes.json.Printer._
 import blueeyes.json.JsonParser
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
 import blueeyes.core.data._
 import blueeyes.core.http.HttpStatusCodes.OK
 import blueeyes.core.http._
 import blueeyes.core.http.MimeTypes._
 import blueeyes.core.http.HttpHeaders._
-import blueeyes.core.http.test.HttpRequestMatchers
+import blueeyes.core.http.test.HttpRequestCheckers
 import blueeyes.json.JsonAST._
 import akka.dispatch.Future
-import blueeyes.concurrent.test.FutureMatchers
 import blueeyes.util.metrics.DataSize
 import DataSize._
 
@@ -22,8 +22,8 @@ import java.net.URLEncoder.{ encode => encodeUrl }
 import blueeyes.core.data.{ Chunk, ByteChunk, Bijection, GZIPByteChunk }
 import scalaz.Success
 
-class HttpRequestHandlerCombinatorsSpec extends Specification with HttpRequestHandlerCombinators with RestPathPatternImplicits with HttpRequestHandlerImplicits 
-with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
+class HttpRequestHandlerCombinatorsSpec extends WordSpec with MustMatchers with HttpRequestHandlerCombinators with RestPathPatternImplicits with HttpRequestHandlerImplicits 
+with blueeyes.bkka.AkkaDefaults with HttpRequestCheckers {
 
   import BijectionsChunkFutureJson._
   import BijectionsChunkString._
@@ -40,7 +40,7 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         }
       }
 
-      handler must_== handler
+      handler must equal (handler)
     }
   }
 
@@ -57,9 +57,7 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
       }
 
       handler.service(HttpRequest[ByteChunk](method = HttpMethods.GET, uri = "/?callback=jsFunc&method=GET")).
-      toOption.get.map(_.content.map(ChunkToString)) must whenDelivered {
-        beSome("""jsFunc("foo",{"headers":{},"status":{"code":200,"reason":""}});""")
-      }
+      toOption.get.map(_.content.map(ChunkToString)).futureValue must be (Some("""jsFunc("foo",{"headers":{},"status":{"code":200,"reason":""}});"""))
     }
 
     "retrieve POST content from query string parameter" in {
@@ -78,13 +76,9 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
 
       val request = HttpRequest[ByteChunk](method = HttpMethods.GET,
                                            uri = "/?callback=jsFunc&method=POST&content=" + encodeUrl("{\"bar\":123}", "UTF-8"))
-
-      handler.service(request).map(_.map(_.content.map(ChunkToString))) must beLike {
-        case Success(future) => future must whenDelivered {
-          beSome {
-            """jsFunc({"bar":123},{"headers":{},"status":{"code":200,"reason":""}});"""
-          }
-        }
+      handler.service(request).map(_.map(_.content.map(ChunkToString))) match {
+        case Success(future) => future.futureValue must be (Some("""jsFunc({"bar":123},{"headers":{},"status":{"code":200,"reason":""}});"""))
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
 
@@ -101,13 +95,9 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
 
       val request = HttpRequest[ByteChunk](method = HttpMethods.GET,
                                            uri = "/?callback=jsFunc&method=GET&headers=" + encodeUrl("{\"bar\":\"123\"}", "UTF-8"))
-
-      handler.service(request).map(_.map(_.content.map(ChunkToString))) must {
-        beLike {
-          case Success(future) => future must whenDelivered {
-            beSome("""jsFunc("foo",{"headers":{"bar":"123"},"status":{"code":200,"reason":""}});""")
-          }
-        }
+      handler.service(request).map(_.map(_.content.map(ChunkToString))) match {
+        case Success(future) => future.futureValue must be (Some("""jsFunc("foo",{"headers":{"bar":"123"},"status":{"code":200,"reason":""}});"""))
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
 
@@ -124,11 +114,9 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
 
       val request = HttpRequest[ByteChunk](method = HttpMethods.GET,
                                            uri = "/?callback=jsFunc&method=GET&headers=" + encodeUrl("{\"bar\":\"123\"}", "UTF-8"))
-
-      handler.service(request).map(_.map(_.content.map(ChunkToString))) must beLike {
-        case Success(future) => future must whenDelivered {
-          beSome("""jsFunc(undefined,{"headers":{},"status":{"code":200,"reason":""}});""")
-        }
+      handler.service(request).map(_.map(_.content.map(ChunkToString))) match {
+        case Success(future) => future.futureValue must be (Some("""jsFunc(undefined,{"headers":{},"status":{"code":200,"reason":""}});"""))
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
 
@@ -144,13 +132,9 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
       }
 
       val request = HttpRequest[ByteChunk]( method = HttpMethods.GET, uri = "/?callback=jsFunc&method=GET")
-
-      handler.service(request).map(_.map(_.content.map(ChunkToString))) must beLike {
-        case Success(future) => future must whenDelivered {
-          beSome {
-            """jsFunc("foo",{"headers":{"foo":"bar"},"status":{"code":200,"reason":""}});"""
-          }
-        }
+      handler.service(request).map(_.map(_.content.map(ChunkToString))) match {
+        case Success(future) => future.futureValue must be (Some("""jsFunc("foo",{"headers":{"foo":"bar"},"status":{"code":200,"reason":""}});"""))
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
 
@@ -168,10 +152,11 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
 
       val request = HttpRequest[ByteChunk](method = HttpMethods.GET, uri = "/?callback=jsFunc&method=GET") 
       
-      errorHandler.service(request) must beLike {
-        case Success(future) => future must succeedWithContent {
-          (byteChunk: ByteChunk) => ChunkToString(byteChunk) must_== """jsFunc("bang",{"headers":{},"status":{"code":400,"reason":"Funky request."}});"""
-        }
+      errorHandler.service(request) match {
+        case Success(future) => 
+          respondWithCode(future, OK)
+          ChunkToString(future.futureValue.content.get) must equal ("""jsFunc("bang",{"headers":{},"status":{"code":400,"reason":"Funky request."}});""")
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
   }
@@ -189,8 +174,9 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         }
       }
       
-      handler.service(HttpRequest[String](HttpMethods.GET, "/foo/bar")) must beLike {
-        case Success(future) => future must succeedWithContent(be_==(defaultValue))
+      handler.service(HttpRequest[String](HttpMethods.GET, "/foo/bar")) match {
+        case Success(future) => succeedWithContent(future, defaultValue)
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
   }
@@ -206,8 +192,9 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         }
       }
       
-      handler.service(HttpRequest[String](HttpMethods.GET, "/foo/blahblah")) must beLike {
-        case Success(future) => future must succeedWithContent(be_==("blahblah"))
+      handler.service(HttpRequest[String](HttpMethods.GET, "/foo/blahblah")) match {
+        case Success(future) => succeedWithContent(future, "blahblah")
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
 
@@ -216,15 +203,16 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         parameter[String, Future[HttpResponse[String]]]('bar, Some("bebe")) {
           get { (request: HttpRequest[String]) =>
             (bar: String) => {
-              request.parameters mustEqual Map('bar -> "bebe")
+              request.parameters must equal (Map('bar -> "bebe"))
               Future(HttpResponse[String](content = request.parameters.get('bar)))
             }
           }
         }
       }
 
-      handler.service(HttpRequest[String](HttpMethods.GET, "/foo/")) must beLike {
-        case Success(future) => future must succeedWithContent(be_==("bebe"))
+      handler.service(HttpRequest[String](HttpMethods.GET, "/foo/")) match {
+        case Success(future) => succeedWithContent(future, "bebe")
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
 
@@ -240,8 +228,9 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         }
       }
       
-      handler.service(HttpRequest[String](HttpMethods.GET, "/foo/blahblah")) must beLike {
-        case Success(future) => future must succeedWithContent(be_==(JString("blahblah")))
+      handler.service(HttpRequest[String](HttpMethods.GET, "/foo/blahblah")) match {
+        case Success(future) => succeedWithContent(future, JString("blahblah"))
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
 
@@ -257,8 +246,9 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         }
       }
       
-      handler.service(HttpRequest[String](HttpMethods.GET, "/foo/blah%20blah")) must beLike {
-        case Success(future) => future must succeedWithContent(be_==(JString("blah blah")))
+      handler.service(HttpRequest[String](HttpMethods.GET, "/foo/blah%20blah")) match {
+        case Success(future) => succeedWithContent(future, JString("blah blah"))
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
   }
@@ -273,8 +263,9 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         }
       }
 
-      handler.service(HttpRequest[String](method = HttpMethods.GET, uri = "A190257C-56F5-499F-A2C6-0FFD0BA7D95B")) must beLike {
-        case Success(future) => future must succeedWithContent(be_==("A190257C-56F5-499F-A2C6-0FFD0BA7D95B"))
+      handler.service(HttpRequest[String](method = HttpMethods.GET, uri = "A190257C-56F5-499F-A2C6-0FFD0BA7D95B")) match {
+        case Success(future) => succeedWithContent(future, "A190257C-56F5-499F-A2C6-0FFD0BA7D95B")
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
 
@@ -292,8 +283,9 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         }
       }
       
-      handler.service(HttpRequest[String](HttpMethods.GET, "/foo/blahblah/entries")) must beLike {
-        case Success(future) => future must succeedWithContent(be_==(JString("blahblah")))
+      handler.service(HttpRequest[String](HttpMethods.GET, "/foo/blahblah/entries")) match {
+        case Success(future) => succeedWithContent(future, JString("blahblah"))
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
   }
@@ -309,10 +301,11 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         }
       }
 
-      handler.service(HttpRequest[ByteChunk](method = HttpMethods.GET, uri = "/foo", content = Some(chunk), headers = HttpHeaders.Empty + `Accept-Encoding`(Encodings.gzip, Encodings.compress))) must beLike {
-        case Success(future) => future must succeedWithContent {
-          (v: ByteChunk) => new String(v.data) must_== new String(GZIPByteChunk(chunk).data)
-        }
+      handler.service(HttpRequest[ByteChunk](method = HttpMethods.GET, uri = "/foo", content = Some(chunk), headers = HttpHeaders.Empty + `Accept-Encoding`(Encodings.gzip, Encodings.compress))) match {
+        case Success(future) => 
+          respondWithCode(future, OK)
+          new String(future.futureValue.content.get.data) must equal (new String(GZIPByteChunk(chunk).data))
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
 
@@ -326,10 +319,11 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         }
       }
       
-      handler.service(HttpRequest[ByteChunk](method = HttpMethods.GET, uri = "/foo", content = Some(chunk), headers = HttpHeaders.Empty + `Accept-Encoding`(Encodings.compress))) must beLike {
-        case Success(future) => future must succeedWithContent {
-          (v: ByteChunk) => new String(v.data) must_== "12"
-        }
+      handler.service(HttpRequest[ByteChunk](method = HttpMethods.GET, uri = "/foo", content = Some(chunk), headers = HttpHeaders.Empty + `Accept-Encoding`(Encodings.compress))) match {
+        case Success(future) => 
+          respondWithCode(future, OK)
+          new String(future.futureValue.content.get.data) must equal ("12")
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
   }
@@ -348,10 +342,11 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         }
       }
       
-      handler.service(HttpRequest[ByteChunk](method = HttpMethods.GET, uri = "/foo", content = Some(Chunk(Array[Byte]('1', '2'), Some(Future(Chunk(Array[Byte]('3', '4')))))))) must beLike {
-        case Success(future) => future must succeedWithContent {
-          (v: ByteChunk) => new String(v.data) must_== "1234"
-        }
+      handler.service(HttpRequest[ByteChunk](method = HttpMethods.GET, uri = "/foo", content = Some(Chunk(Array[Byte]('1', '2'), Some(Future(Chunk(Array[Byte]('3', '4')))))))) match {
+        case Success(future) => 
+          respondWithCode(future, OK)
+          new String(future.futureValue.content.get.data) must equal ("1234")
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
 
@@ -368,10 +363,11 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         }
       }
       
-      handler.service(HttpRequest[ByteChunk](method = HttpMethods.GET, uri = "/foo", content = Some(Chunk(Array[Byte]('1', '2'), Some(Future(Chunk(Array[Byte]('3', '4')))))))) must beLike {
-        case Success(future) => future must succeedWithContent {
-          (v: ByteChunk) => new String(v.data) must_== "12"
-        }
+      handler.service(HttpRequest[ByteChunk](method = HttpMethods.GET, uri = "/foo", content = Some(Chunk(Array[Byte]('1', '2'), Some(Future(Chunk(Array[Byte]('3', '4')))))))) match {
+        case Success(future) => 
+          respondWithCode(future, OK)
+          new String(future.futureValue.content.get.data) must equal ("12")
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
   }
@@ -388,8 +384,9 @@ with blueeyes.bkka.AkkaDefaults with HttpRequestMatchers {
         }
       }
 
-      svc.service(HttpRequest[String](HttpMethods.GET, "/foo/blah%20blah")) must beLike {
-        case Success(future) => future must succeedWithContent(be_==(JString("/foo/blah blah")))
+      svc.service(HttpRequest[String](HttpMethods.GET, "/foo/blah%20blah")) match {
+        case Success(future) => succeedWithContent(future, JString("/foo/blah blah"))
+        case other => fail("Expected Success(future), but got: " + other)
       }
     }
   }
