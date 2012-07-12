@@ -1,9 +1,10 @@
 package blueeyes.core.service
 
 import blueeyes.BlueEyesServiceBuilder
-import blueeyes.concurrent.test._
+import blueeyes.core.http.test.HttpRequestCheckers
 import akka.dispatch.{Await, Future}
-import akka.util.Duration._
+import akka.util.Duration
+import java.util.concurrent.TimeUnit._
 import blueeyes.core.http.combinators.HttpRequestCombinators
 import blueeyes.core.http.MimeTypes._
 import blueeyes.core.http.HttpStatusCodes._
@@ -13,68 +14,52 @@ import blueeyes.core.http._
 import org.streum.configrity.Configuration
 import org.streum.configrity.io.BlockFormat
 
-import org.specs2.mutable.Specification
-import org.specs2.specification.{Outside, Scope}
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
-class HttpServerSpec extends Specification with BijectionsChunkString with FutureMatchers {
-  object server extends Outside[TestServer] with Scope {
-    def outside = {
-      val config = Configuration.parse("", BlockFormat)
-      new TestServer(config) ->- { s => Await.result(s.start, 10 seconds) }
-    }
-  }
+class HttpServerSpec extends WordSpec with MustMatchers with BijectionsChunkString with HttpRequestCheckers {
+  val config = Configuration.parse("", BlockFormat)
+  val timeout = Duration(10, SECONDS)
+  val server = new TestServer(config) ->- { s => Await.result(s.start, timeout) }
 
-  "HttpServer.start" should {
-    "executes start up function" in server { 
-      _.startupCalled must be_==(true)
+  "HttpServer.start" should { 
+    "executes start up function" in {
+      server.startupCalled must be (true)
     }
-    "set status to Starting" in server { 
-      _.status must be (RunningStatus.Started)
+    "set status to Starting" in {
+      server.status must be (RunningStatus.Started)
     }
   }
   
   "HttpServer.apply" should {
-    "delegate to service request handler" in server { s =>
-      s.service(HttpRequest[ByteChunk](HttpMethods.GET, "/foo/bar")).toOption.get must whenDelivered {
-        beLike {
-          case HttpResponse(HttpStatus(status, _), headers, Some(content), _) =>
-            (status must_== OK) and
-            (ChunkToString(content) must_== "blahblah") and
-            (headers.get("Content-Type") must beSome("text/plain"))
-        }
+    "delegate to service request handler" in {
+      server.service(HttpRequest[ByteChunk](HttpMethods.GET, "/foo/bar")).toOption.get.futureValue match {
+        case HttpResponse(HttpStatus(status, _), headers, Some(content), _) =>
+          status must equal (OK)
+          ChunkToString(content) must equal ("blahblah")
+          headers.get("Content-Type") must be (Some("text/plain"))
+        case other => fail("Expected HttpResponse, but got: " +  other)
       }
     }
     
-    "produce NotFound response when service is not defined for request" in server { s =>
-      s.service(HttpRequest[ByteChunk](HttpMethods.GET, "/blahblah")).toOption.get must whenDelivered {
-        beLike {
-          case HttpResponse(HttpStatus(HttpStatusCodes.NotFound, _), _, _, _) => ok
-        }
-      }
+    "produce NotFound response when service is not defined for request" in {
+      respondWithCode(server.service(HttpRequest[ByteChunk](HttpMethods.GET, "/blahblah")).toOption.get, HttpStatusCodes.NotFound)
     }
 
-    "gracefully handle error-producing service handler" in server { s =>
-      s.service(HttpRequest[ByteChunk](HttpMethods.GET, "/foo/bar/error")).toOption.get must whenDelivered {
-        beLike {
-          case HttpResponse(HttpStatus(HttpStatusCodes.InternalServerError, _), _, _, _) => ok
-        }
-      }
+    "gracefully handle error-producing service handler" in {
+      respondWithCode(server.service(HttpRequest[ByteChunk](HttpMethods.GET, "/foo/bar/error")).toOption.get, HttpStatusCodes.InternalServerError)
     }
-    "gracefully handle dead-future-producing service handler" in server { s =>
-      s.service(HttpRequest[ByteChunk](HttpMethods.GET, "/foo/bar/dead")).toOption.get must whenDelivered {
-        beLike {
-          case HttpResponse(HttpStatus(HttpStatusCodes.InternalServerError, _), _, _, _) => ok
-        }
-      }
+    "gracefully handle dead-future-producing service handler" in {
+      respondWithCode(server.service(HttpRequest[ByteChunk](HttpMethods.GET, "/foo/bar/dead")).toOption.get, HttpStatusCodes.InternalServerError)
     }
   }
 
   "HttpServer stop" should {
-    "execute shut down function" in server { s =>
-      val f = s.stop
-      Await.result(f, 10 seconds)
-      (s.shutdownCalled must beTrue) and
-      (s.status must be (RunningStatus.Stopped))
+    "execute shut down function" in {
+      val f = server.stop
+      Await.result(f, timeout)
+      server.shutdownCalled must be (true)
+      server.status must be (RunningStatus.Stopped)
     }
   }  
 }
