@@ -1,6 +1,7 @@
 package blueeyes.core.service
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import blueeyes.core.http._
 import blueeyes.core.http.test._
 import blueeyes.core.http.HttpStatusCodes._
@@ -8,44 +9,59 @@ import blueeyes.util.RichThrowableImplicits._
 import akka.dispatch.Future
 import akka.dispatch.Promise
 
-class HttpResponseHelpersSpec extends Specification with HttpResponseHelpers with HttpRequestMatchers {
+class HttpResponseHelpersSpec extends WordSpec with MustMatchers with HttpResponseHelpers with HttpRequestCheckers {
   
   "HttpResponseHelpers respond: creates Future with the specified parameters" in {
     val statusCode  = InternalServerError
     val headers = Map("foo" -> "bar")
     val content = "zoo"
 
-    respond(HttpStatus(statusCode), headers, Some(content)) must whenDelivered {
+    respond(HttpStatus(statusCode), headers, Some(content)).futureValue match {
+      case HttpResponse(HttpStatus(code, _), HttpHeaders(h), c, _) => 
+          code must equal (statusCode) 
+          h must equal (headers) 
+          c must be (Some(content))
+      case other => fail("Expected HttpResponse, but got: " + other)
+    }
+    /*respond(HttpStatus(statusCode), headers, Some(content)) must whenDelivered {
       beLike {
         case HttpResponse(HttpStatus(code, _), HttpHeaders(h), c, _) => 
           (code must_== statusCode) and (h must_== headers) and (c must beSome(content))
       }
-    }
+    }*/
   }
 
   "HttpResponseHelpers respondLater: creates Future when response is OK" in {
     val headers = Map("foo" -> "bar")
     val content = "zoo"
 
-    respondLater[String](Future(content), headers) must whenDelivered {
+    respondLater[String](Future(content), headers).futureValue match {
+      case HttpResponse(HttpStatus(code, _), HttpHeaders(h), c, _) => 
+        code must equal (OK) 
+        h must equal (headers) 
+        c must be (Some(content))
+      case other => fail("Expected HttpResponse, but got: " + other)
+    }
+    /*respondLater[String](Future(content), headers) must whenDelivered {
       beLike { 
         case HttpResponse(HttpStatus(code, _), HttpHeaders(h), c, _) => 
           (code must_== OK) and (h must_== headers) and (c must beSome(content))
       }
-    }
+    }*/
   }
 
   "HttpResponseHelpers respondLater: creates Future when response is error (Future is cancelled with error)" in {
     val error   = new NullPointerException()
     val promise = Promise.failed[String](error)
-    respondLater[String](promise) must respondWithCode(InternalServerError)
+    respondWithCode(respondLater[String](promise), InternalServerError)
+    //respondLater[String](promise) must respondWithCode(InternalServerError)
   }
 
   "HttpResponseHelpers respondLater: creates Future when response is error (Future is cancelled without error)" in {
     val error   = new NullPointerException()
     val promise = Promise[String]
     promise.failure(new RuntimeException())
-
-    respondLater[String](promise) must respondWithCode(InternalServerError)
+    respondWithCode(respondLater[String](promise), InternalServerError)
+    //respondLater[String](promise) must respondWithCode(InternalServerError)
   }
 }
