@@ -4,10 +4,11 @@ import org.scalacheck._
 import org.scalacheck.Prop.forAllNoShrink
 import scala.util.Random
 import blueeyes.util.SpecialCharToStringTranscoder
-import org.specs2.mutable.Specification
-import org.specs2.ScalaCheck
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
+import org.scalatest.prop.Checkers
 
-class URITranscodersSpec extends Specification with ScalaCheck{
+class URITranscodersSpec extends WordSpec with MustMatchers with Checkers {
   private val random = new Random()
 
   private def unicodeChar = Gen((p: Gen.Params) => {
@@ -44,5 +45,5 @@ class URITranscodersSpec extends Specification with ScalaCheck{
       passTest(queryGen, URITranscoders.queryTranscoder)
     }
   }
-  private def passTest(gen: Gen[String], trascoder: SpecialCharToStringTranscoder) = forAllNoShrink(gen){n: String => trascoder.decode(trascoder.encode(n)) must be_==(n)}
+  private def passTest(gen: Gen[String], trascoder: SpecialCharToStringTranscoder) = forAllNoShrink(gen){ n: String => trascoder.decode(trascoder.encode(n)) == (n) }
 }
