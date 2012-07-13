@@ -1,11 +1,12 @@
 package blueeyes.core.service
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import scala.util.matching.Regex
 
 import blueeyes.core.http.{HttpRequest, HttpMethods}
 
-class RestPathPatternSpec extends Specification{
+class RestPathPatternSpec extends WordSpec with MustMatchers {
   import RestPathPattern._
 
   "path matching and regex extraction" should {
@@ -66,7 +67,7 @@ class RestPathPatternSpec extends Specification{
       )
     }
     "not match more than specified when end method is invoked" in {
-      RestPathPattern("/get/'foo").$.isDefinedAt("/foo/bar") mustEqual(false)
+      RestPathPattern("/get/'foo").$.isDefinedAt("/foo/bar") must equal (false)
     }
     "create parameters for regression case" in {
       testPath("/get/'foo",
@@ -80,85 +81,85 @@ class RestPathPatternSpec extends Specification{
     "combine symbols and literals using slash operator" in {
       val pattern: RestPathPattern = "/foo" / 'bar / 'biz / "blah"
 
-      pattern("/foo/a/b/blah") mustEqual(Map('bar -> "a", 'biz -> "b"))
+      pattern("/foo/a/b/blah") must equal (Map('bar -> "a", 'biz -> "b"))
     }
     "work starting from root" in {
-      (RestPathPattern.Root / "foo").isDefinedAt("/foo") mustEqual(true)
+      (RestPathPattern.Root / "foo").isDefinedAt("/foo") must equal (true)
     }
     "match complex path with symbols" in {
-      (RestPathPattern.Root / "foo" / "bar" / 'param).isDefinedAt("/foo/bar/value") mustEqual(true)
+      (RestPathPattern.Root / "foo" / "bar" / 'param).isDefinedAt("/foo/bar/value") must equal (true)
     }
     "create single parameter" in {
-      (RestPathPattern.Root / 'param).apply("/value") mustEqual(Map[Symbol, String]('param -> "value"))
+      (RestPathPattern.Root / 'param).apply("/value") must equal (Map[Symbol, String]('param -> "value"))
     }
     "create multiple parameters" in {
-      (RestPathPattern.Root / 'param1 / 'param2).apply("/value1/value2") mustEqual(Map[Symbol, String]('param1 -> "value1", 'param2 -> "value2"))
+      (RestPathPattern.Root / 'param1 / 'param2).apply("/value1/value2") must equal (Map[Symbol, String]('param1 -> "value1", 'param2 -> "value2"))
     }
     "create single parameter in lengthy literal path" in {
-      (RestPathPattern.Root / "foo" / "bar" / 'param).apply("/foo/bar/value") mustEqual(Map[Symbol, String]('param -> "value"))
+      (RestPathPattern.Root / "foo" / "bar" / 'param).apply("/foo/bar/value") must equal (Map[Symbol, String]('param -> "value"))
     }
     "should optionally accept slash when option variant is used" in {
-      (("foo": RestPathPattern) /?).apply("foo/") mustEqual(Map())
-      (("foo": RestPathPattern) /?).apply("foo") mustEqual(Map())
+      (("foo": RestPathPattern) /?).apply("foo/") must equal (Map())
+      (("foo": RestPathPattern) /?).apply("foo") must equal (Map())
     }
   }
 
   "end symbol" should {
     "match end of path when final element is symbol" in {
-      ("/foo/bar/'param" $).apply("/foo/bar/value") mustEqual(Map('param -> "value"))
+      ("/foo/bar/'param" $).apply("/foo/bar/value") must equal (Map('param -> "value"))
     }
     "not match beyond end of path when final element is symbol" in {
-      ("/foo/bar/'param" $).isDefinedAt("/foo/bar/value/") must_==(false)
+      ("/foo/bar/'param" $).isDefinedAt("/foo/bar/value/") must equal (false)
     }
     "match end of path when final element is string" in {
-      ("/foo/bar/adCode.html" $).apply("/foo/bar/adCode.html") mustEqual(Map())
+      ("/foo/bar/adCode.html" $).apply("/foo/bar/adCode.html") must equal (Map())
     }
     "not match beyond end of path when final element is string" in {
-      ("/foo/bar/adCode.html" $).isDefinedAt("/foo/bar/adCode.html2") must_==(false)
+      ("/foo/bar/adCode.html" $).isDefinedAt("/foo/bar/adCode.html2") must equal (false)
     }
   }
 
   "`...` operator" should {
     "match trailing string" in {
-      ("/foo" `...` ('rest)).apply("/foo/bar") mustEqual(Map('rest -> "/bar"))
+      ("/foo" `...` ('rest)).apply("/foo/bar") must equal (Map('rest -> "/bar"))
     }
   }
 
   /* ---- Regex Tests ---- */
   "Regular expression pattern" should {
     "match for a simple pattern" in {
-      (RestPathPattern.Root/ "foo" / "bar" / new Regex("""(steamboats)""", "id") ~ List('id)).isDefinedAt("/foo/bar/steamboats") mustEqual(true)
+      (RestPathPattern.Root/ "foo" / "bar" / new Regex("""(steamboats)""", "id") ~ List('id)).isDefinedAt("/foo/bar/steamboats") must equal (true)
     }
     "not match for a simple pattern"  in {
-      (RestPathPattern.Root/ "foo" / "bar" / new Regex("""(steamboats)""", "id") ~ List('id)).isDefinedAt("/foo/bar/lame_boats") mustEqual(false)
+      (RestPathPattern.Root/ "foo" / "bar" / new Regex("""(steamboats)""", "id") ~ List('id)).isDefinedAt("/foo/bar/lame_boats") must equal (false)
     }
     "not match for when the match occurs but later in the string" in {
-      (RestPathPattern.Root/ "foo" / "bar" / new Regex("""(steamboats)""", "id") ~ List('id)).isDefinedAt("/foo/bar/lame_steamboats") mustEqual(false)
+      (RestPathPattern.Root/ "foo" / "bar" / new Regex("""(steamboats)""", "id") ~ List('id)).isDefinedAt("/foo/bar/lame_steamboats") must equal (false)
     }
     "match a more complex pattern" in {
-      (RestPathPattern.Root/ "foo" / "bar" / new Regex("""([a-z]+_[0-9])""", "id") ~ List('id)).isDefinedAt("/foo/bar/hercules_1") mustEqual(true)
+      (RestPathPattern.Root/ "foo" / "bar" / new Regex("""([a-z]+_[0-9])""", "id") ~ List('id)).isDefinedAt("/foo/bar/hercules_1") must equal (true)
     }
     "not match for a more complex pattern" in {
-      (RestPathPattern.Root/ "foo" / "bar" / new Regex("""([a-z]+_[0-9])""", "id") ~ List('id)).isDefinedAt("/foo/bar/HadesSux") mustEqual(false)
+      (RestPathPattern.Root/ "foo" / "bar" / new Regex("""([a-z]+_[0-9])""", "id") ~ List('id)).isDefinedAt("/foo/bar/HadesSux") must equal (false)
     }
    "match a complex pattern with regexp with named capturing group" in {
-      (RestPathPattern.Root/ "foo" / "bar" / """(?<id>[a-z]+_[0-9])""").isDefinedAt("/foo/bar/HadesSux") mustEqual(false)
+      (RestPathPattern.Root/ "foo" / "bar" / """(?<id>[a-z]+_[0-9])""").isDefinedAt("/foo/bar/HadesSux") must equal (false)
     }
     "match for the other syntax and positive look ahead" in {
-      ("/foo/bar" / new Regex("""([a-z]+)(\.html)""", "path") ~ List('path) $).isDefinedAt("/foo/bar/example.html") must_== (true)
+      ("/foo/bar" / new Regex("""([a-z]+)(\.html)""", "path") ~ List('path) $).isDefinedAt("/foo/bar/example.html") must equal (true)
     }
     "use the implicit for Regex (removed the $)" in {
-      ("/foo/bar" / new Regex("""([a-z]+)(\.html)""", "path") ~ List('path)).isDefinedAt("/foo/bar/example.html") must_== (true)
+      ("/foo/bar" / new Regex("""([a-z]+)(\.html)""", "path") ~ List('path)).isDefinedAt("/foo/bar/example.html") must equal (true)
     }
     "recover the parameter with positive look ahead" in {
       val pattern: RestPathPattern = "/darth" / new Regex("""([a-z]+)(\.gif)""", "path") ~ List('path)
-      pattern.apply("/darth/joshuar.gif").mustEqual(Map[Symbol, String]('path -> "joshuar"))
+      pattern.apply("/darth/joshuar.gif") must equal (Map[Symbol, String]('path -> "joshuar"))
     }
   }
 
   "Symbol pattern" should {
     "match string with period" in {
-      ("/foo/bar/'name" $).isDefinedAt("/foo/bar/foocubus.gif") must_== (true)
+      ("/foo/bar/'name" $).isDefinedAt("/foo/bar/foocubus.gif") must equal (true)
     }
   }
 
@@ -166,7 +167,7 @@ class RestPathPatternSpec extends Specification{
     "create parameters automatically for complex path specified as string" in {
       val pattern: RestPathPattern = "/foo/bar/'param"
 
-      pattern.apply("/foo/bar/value") mustEqual(Map[Symbol, String]('param -> "value"))
+      pattern.apply("/foo/bar/value") must equal (Map[Symbol, String]('param -> "value"))
     }
   }
 
@@ -174,23 +175,34 @@ class RestPathPatternSpec extends Specification{
     "shift subpath leftward by matched pattern" in {
       val pattern: RestPathPattern = "/foo/'param"
 
-      pattern.shift(HttpRequest(method = HttpMethods.GET, uri = "/foo/bar/baz")) mustEqual(HttpRequest(method = HttpMethods.GET, uri = "/foo/bar/baz").withSubpath("/baz"))
+      pattern.shift(HttpRequest(method = HttpMethods.GET, uri = "/foo/bar/baz")) must equal (HttpRequest(method = HttpMethods.GET, uri = "/foo/bar/baz").withSubpath("/baz"))
     }
   }
 
   private def testPath(path: String, isDefinedAt: List[(String, Map[Symbol, String])], isNotDefinedAt: List[String]) = {
     val pattern = RestPathPattern(path)
 
-    { pair: (String, Map[Symbol, String]) =>
+    isDefinedAt.foreach { pair: (String, Map[Symbol, String]) =>
       val path = pair._1
       val map  = pair._2
 
-      pattern.isDefinedAt(path) mustEqual(true)
-      pattern.apply(path) mustEqual(map)
+      pattern.isDefinedAt(path) must equal (true)
+      pattern.apply(path) must equal (map)
+    }
+
+    isNotDefinedAt.foreach { path: String =>
+      pattern.isDefinedAt(path) must equal (false)
+    }
+    /*{ pair: (String, Map[Symbol, String]) =>
+      val path = pair._1
+      val map  = pair._2
+
+      pattern.isDefinedAt(path) must equal (true)
+      pattern.apply(path) must equal (map)
     } forall isDefinedAt
 
     { path: String =>
-      pattern.isDefinedAt(path) mustEqual(false)
-    } forall  isNotDefinedAt
+      pattern.isDefinedAt(path) must equal (false)
+    } forall  isNotDefinedAt*/
   }
 }
