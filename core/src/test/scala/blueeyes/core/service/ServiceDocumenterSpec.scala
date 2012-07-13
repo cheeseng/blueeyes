@@ -1,6 +1,7 @@
 package blueeyes.core.service
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import blueeyes.util.printer.HtmlPrinter
 import blueeyes.core.http.{HttpResponse, HttpRequest}
 import akka.dispatch.Future
@@ -8,7 +9,7 @@ import akka.dispatch.Future
 import org.streum.configrity.Configuration
 import org.streum.configrity.io.BlockFormat
 
-class ServiceDocumenterSpec extends Specification with HttpRequestHandlerCombinators with blueeyes.bkka.AkkaDefaults {
+class ServiceDocumenterSpec extends WordSpec with MustMatchers with HttpRequestHandlerCombinators with blueeyes.bkka.AkkaDefaults {
   import Metadata._
 
   "ServiceDocumente" should{
@@ -116,7 +117,7 @@ class ServiceDocumenterSpec extends Specification with HttpRequestHandlerCombina
           }
         }
       }
-      ServiceDocumenter.printFormatted(ServiceContext(Configuration.parse("", BlockFormat), Configuration.parse("", BlockFormat), "Foo", ServiceVersion(1, 0, "0"), Some("Sample service"), "localhost", 8080, 8081), handler) mustEqual (expected)
+      ServiceDocumenter.printFormatted(ServiceContext(Configuration.parse("", BlockFormat), Configuration.parse("", BlockFormat), "Foo", ServiceVersion(1, 0, "0"), Some("Sample service"), "localhost", 8080, 8081), handler) must equal (expected)
     }
   }
 }
