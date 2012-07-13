@@ -1,10 +1,11 @@
 package blueeyes.core.service
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
-class HttpServiceVersionImplicitsSpec extends Specification{
+class HttpServiceVersionImplicitsSpec extends WordSpec with MustMatchers {
 
   "HttpServiceVersionImplicits stringToVersion: creates version" in{
-    ServiceVersion.fromString("1.2.3") mustEqual(ServiceVersion(1, 2, "3"))
+    ServiceVersion.fromString("1.2.3") must equal (ServiceVersion(1, 2, "3"))
   }
 }
