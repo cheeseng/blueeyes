@@ -1,11 +1,11 @@
 package blueeyes.core.service
 
-import test.BlueEyesServiceSpecification
+import test.BlueEyesServiceSpec
 
 import blueeyes.BlueEyesServiceBuilder
 import blueeyes.health.metrics.{eternity}
 import blueeyes.health.metrics.IntervalLength._
-import blueeyes.core.http.test._
+import blueeyes.core.http.test.HttpRequestCheckers
 import blueeyes.core.http.HttpStatusCodes._
 import blueeyes.core.http.MimeTypes._
 import blueeyes.core.http.{HttpRequest, HttpResponse, HttpStatus}
@@ -18,10 +18,9 @@ import akka.util.Timeout
 import java.io.File
 import scala.util.Random
 
-import org.specs2.specification.{Step, Fragments}
 import org.scalacheck.Gen._
 
-class HttpServiceDescriptorFactoryCombinatorsSpec extends BlueEyesServiceSpecification with HealthMonitorService with BijectionsChunkJson with HttpRequestMatchers {
+class HttpServiceDescriptorFactoryCombinatorsSpec extends BlueEyesServiceSpec with HealthMonitorService with BijectionsChunkJson with HttpRequestCheckers {
   val logFilePrefix = "w3log-" + identifier.sample.get
   override def configuration = """
     services {
@@ -63,7 +62,7 @@ class HttpServiceDescriptorFactoryCombinatorsSpec extends BlueEyesServiceSpecifi
     def isDefinedAt(x: HttpRequest[ByteChunk]) = true
   }
 
-  override protected def afterSpec() = Step{
+  override protected def afterSpec() {
     findLogFile foreach { _.delete }
   }
 
@@ -73,31 +72,34 @@ class HttpServiceDescriptorFactoryCombinatorsSpec extends BlueEyesServiceSpecifi
 
   "service" should {
     "support health monitor service" in {
-      service.get("/foo") must whenDelivered {
-        beLike {
-          case HttpResponse(HttpStatus(OK, _), _, None, _) => ok
-        }
+      service.get("/foo").futureValue match {
+        case HttpResponse(HttpStatus(OK, _), _, None, _) => // succeeded
+        case other => fail("Expected HttpResponse(HttpStatus(OK, _), _, None, _), but got: " + other)
       }
     }
 
     "support health monitor statistics" in {
-      service.get[JValue]("/blueeyes/services/email/v1/health") must succeedWithContent { (content: JValue) =>
-        (content \ "requests" \ "GET" \ "count" \ "eternity" mustEqual(JArray(JInt(1) :: Nil))) and
-        (content \ "requests" \ "GET" \ "timing" mustNotEqual(JNothing)) and
-        (content \ "requests" \ "GET" \ "timing" \ "perSecond" \ "eternity" mustNotEqual(JNothing)) and
-        (content \ "service" \ "name"    mustEqual(JString("email"))) and
-        (content \ "service" \ "version" mustEqual(JString("1.2.3"))) and
-        (content \ "uptimeSeconds"       mustNotEqual(JNothing)) 
-      }
+      val future = service.get[JValue]("/blueeyes/services/email/v1/health")
+      respondWithCode(future, OK)
+      val content = future.futureValue.content.get
+      content \ "requests" \ "GET" \ "count" \ "eternity" must equal (JArray(JInt(1) :: Nil))
+      content \ "requests" \ "GET" \ "timing" must not equal JNothing
+      content \ "requests" \ "GET" \ "timing" \ "perSecond" \ "eternity" must not equal JNothing
+      content \ "service" \ "name"    must equal (JString("email"))
+      content \ "service" \ "version" must equal (JString("1.2.3"))
+      content \ "uptimeSeconds" must not equal (JNothing) 
     }
 
     "add service locator" in {
       import BijectionsChunkString._
-      service.get[String]("/proxy") must succeedWithContent((_: String) must_== "it works!")
+      succeedWithContent(service.get[String]("/proxy"), "it works!")
     }
 
     "RequestLogging: Creates logRequest" in{
-      findLogFile must beSome[File]
+      findLogFile match {
+        case Some(_: File) => // ok
+        case other => fail("Expected Some(_: File), but got: " + other)
+      }
     }
   }
 }
