@@ -193,16 +193,5 @@ class RestPathPatternSpec extends WordSpec with MustMatchers {
     isNotDefinedAt.foreach { path: String =>
       pattern.isDefinedAt(path) must equal (false)
     }
-    /*{ pair: (String, Map[Symbol, String]) =>
-      val path = pair._1
-      val map  = pair._2
-
-      pattern.isDefinedAt(path) must equal (true)
-      pattern.apply(path) must equal (map)
-    } forall isDefinedAt
-
-    { path: String =>
-      pattern.isDefinedAt(path) must equal (false)
-    } forall  isNotDefinedAt*/
   }
 }
