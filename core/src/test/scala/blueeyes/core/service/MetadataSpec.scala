@@ -1,6 +1,7 @@
 package blueeyes.core.service
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 
 import blueeyes.core.http._
 import blueeyes.util.printer._
@@ -9,7 +10,7 @@ import RestPathPatternParsers._
 import akka.dispatch.Future
 import blueeyes.bkka.AkkaDefaults
 
-class MetadataSpec extends Specification with HttpRequestHandlerCombinators with AkkaDefaults {
+class MetadataSpec extends WordSpec with MustMatchers with HttpRequestHandlerCombinators with AkkaDefaults {
   import Metadata._
 
   "serviceToMetadata" should{
@@ -108,7 +109,7 @@ class MetadataSpec extends Specification with HttpRequestHandlerCombinators with
           }
         }
       }
-      HtmlPrinter.printFormatted(serviceToMetadata(handler)) mustEqual (expected)
+      HtmlPrinter.printFormatted(serviceToMetadata(handler)) must equal (expected)
     }
   }
 }
