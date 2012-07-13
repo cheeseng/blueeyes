@@ -1,28 +1,25 @@
 package blueeyes.core.service
 
-import test.BlueEyesServiceSpecification
+import test.BlueEyesServiceSpec
 import blueeyes.json.JsonAST._
 import blueeyes.core.http.HttpStatus
 import blueeyes.core.http.HttpStatusCodes._
 import blueeyes.core.http.MimeTypes._
-import blueeyes.core.http.test.HttpRequestMatchers 
+import blueeyes.core.http.test.HttpRequestCheckers 
 
-class ServerHealthMonitorServiceSpec extends BlueEyesServiceSpecification with ServerHealthMonitorService with HttpRequestMatchers {
+class ServerHealthMonitorServiceSpec extends BlueEyesServiceSpec with ServerHealthMonitorService with HttpRequestCheckers {
   val healthMonitorQueryTimeout = akka.util.Timeout(10000)
 
    "Server Health Monitor Service" should{
     "get server health" in {
-      service.get[JValue]("/blueeyes/server/health") must succeedWithContent {
-        (content: JValue) => {
-          (content \ "runtime" must_!=(JNothing)) and
-          (content \ "memory" must_!=(JNothing)) and
-          (content \ "threads" must_!=(JNothing)) and
-          (content \ "operatingSystem" must_!=(JNothing)) and
-          (content \ "server" \ "hostName" must_!=(JNothing)) and
-          (content \ "server" \ "port" must_!=(JNothing)) and
-          (content \ "server" \ "sslPort" must_!=(JNothing))
-        }
-      }
+      val content = service.get[JValue]("/blueeyes/server/health").futureValue.content.get
+      content \ "runtime" must not equal JNothing
+      content \ "memory" must not equal JNothing
+      content \ "threads" must not equal JNothing
+      content \ "operatingSystem" must not equal JNothing
+      content \ "server" \ "hostName" must not equal JNothing
+      content \ "server" \ "port" must not equal JNothing
+      content \ "server" \ "sslPort" must not equal JNothing
     }
   }
 }
