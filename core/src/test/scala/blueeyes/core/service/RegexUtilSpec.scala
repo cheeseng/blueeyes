@@ -1,10 +1,11 @@
 package blueeyes.core.service
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import blueeyes.parsers.RegularExpressionAST._
 import blueeyes.parsers.RegularExpressionPatten
 
-class RegexUtilSpec extends  Specification with RegexUtil{
+class RegexUtilSpec extends WordSpec with MustMatchers with RegexUtil{
   "RegexUtil" should{
     "extract name with single named group" in{
       testExtract("(?<bar>:[a-z]+@)", ("(:[a-z]+@)", List("bar"), List("bar")))
@@ -33,6 +34,6 @@ class RegexUtilSpec extends  Specification with RegexUtil{
   }
 
   private def testExtract(input: String, output: (String, List[String], List[String])) = {
-    extractNamedCaptureGroup(RegularExpressionPatten(input)) mustEqual (RegularExpressionPatten(output._1), output._2, output._3)
+    extractNamedCaptureGroup(RegularExpressionPatten(input)) must equal (RegularExpressionPatten(output._1), output._2, output._3)
   }
 }
