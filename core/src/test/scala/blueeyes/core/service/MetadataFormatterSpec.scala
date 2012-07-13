@@ -3,10 +3,11 @@ package blueeyes.core.service
 import blueeyes.core.http._
 import blueeyes.util.printer._
 
-import org.specs2.mutable.Specification
+import org.scalatest.WordSpec
+import org.scalatest.matchers.MustMatchers
 import blueeyes.core.service.RestPathPatternParsers.LiteralPathPattern
 
-class MetadataFormatterSpec extends Specification{
+class MetadataFormatterSpec extends WordSpec with MustMatchers {
 
   "pretty-printing service metadata" should {
     "pretty-print a simple set of metadata" in {
@@ -33,7 +34,7 @@ class MetadataFormatterSpec extends Specification{
         HttpMethodMetadata(HttpMethods.POST),
         HttpMethodMetadata(HttpMethods.PUT),
         HttpMethodMetadata(HttpMethods.DELETE)
-      )) must_== expected
+      )) must equal (expected)
     }
   }
   "html service metadata" should {
@@ -241,7 +242,7 @@ class MetadataFormatterSpec extends Specification{
             ParameterMetadata('callback, None)
           ),
         HttpMethodMetadata(HttpMethods.DELETE)
-      ))) must_== expected
+      ))) must equal (expected)
     }
   }
 }
