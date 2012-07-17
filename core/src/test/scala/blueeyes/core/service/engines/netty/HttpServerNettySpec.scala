@@ -6,7 +6,7 @@ import blueeyes.core.service._
 import collection.mutable.ArrayBuilder.ofByte
 import engines.security.BlueEyesKeyStoreFactory
 import engines.{TestEngineService, TestEngineServiceContext, HttpClientXLightWeb}
-import org.specs2.mutable.Specification
+import org.scalatest._
 
 import akka.dispatch.Future
 import akka.dispatch.Promise
@@ -26,27 +26,22 @@ import javax.net.ssl.TrustManagerFactory
 import org.streum.configrity.Configuration
 import org.streum.configrity.io.BlockFormat
 
-import blueeyes.concurrent.test.FutureMatchers
-import org.specs2.specification.{Step, Fragments}
-import org.specs2.time.TimeConversions._
+import blueeyes.concurrent.test.AkkaFutures
 
-class HttpServerNettySpec extends Specification with BijectionsByteArray with BijectionsChunkString with blueeyes.bkka.AkkaDefaults with FutureMatchers {
+class HttpServerNettySpec extends WordSpec with MustMatchers with BeforeAndAfterAll with BijectionsByteArray with BijectionsChunkString with blueeyes.bkka.AkkaDefaults with AkkaFutures {
 
   private val configPattern = """server {
   port = %d
   sslPort = %d
 }"""
 
-  val duration: org.specs2.time.Duration = 1000.milliseconds
+  val duration = Duration(50000, "milliseconds")
   val retries = 50
-
-  implicit val testTimeouts = FutureTimeouts(50, duration)
 
   private var port = 8585
   private var server: Option[NettyEngine] = None
 
-  override def is = args(sequential = true) ^ super.is
-  override def map(fs: =>Fragments) = Step {
+  override def beforeAll(configMap: Map[String, Any]) {
     var error: Option[Throwable] = None
     do{
       val config = Configuration.parse(configPattern.format(port, port + 1), BlockFormat)
@@ -70,33 +65,31 @@ class HttpServerNettySpec extends Specification with BijectionsByteArray with Bi
 
       doneSignal.await()
     }while(error != None)
-  } ^ fs ^ Step {
+  }
+
+  override def afterAll(configMap: Map[String, Any]) {
     TestEngineServiceContext.dataFile.delete
     server.foreach(_.stop)
   }
 
-
   "HttpServer" should {
     "return empty response"in{
-      client.post("/empty/response")("") must whenDelivered {
-        beLike {
-          case HttpResponse(status, _, content, _) =>
-            (status.code must be (OK)) and
-            (content must beNone)
-        }
+      client.post("/empty/response")("").futureValue match {
+        case HttpResponse(status, _, content, _) =>
+            status.code must be (OK)
+            content must be (None)
+        case other => fail("Expected HttpResponse(status, _, content, _), but got: " + other)
       }
     }
 
     "write file"in{
       TestEngineServiceContext.dataFile.delete
-
-      client.post("/file/write")("foo") must whenDelivered {
-        beLike {
-          case HttpResponse(status, _, content, _) =>
-            (status.code must be (OK)) and
-            (TestEngineServiceContext.dataFile.exists must be_==(true)) and
-            (TestEngineServiceContext.dataFile.length mustEqual("foo".length))
-        }
+      client.post("/file/write")("foo").futureValue match {
+        case HttpResponse(status, _, content, _) =>
+            status.code must be (OK)
+            TestEngineServiceContext.dataFile.exists must equal (true)
+            TestEngineServiceContext.dataFile.length must equal ("foo".length)
+        case other => fail("Expected HttpResponse(status, _, content, _), but got: " + other)
       }
     }
 
@@ -104,81 +97,83 @@ class HttpServerNettySpec extends Specification with BijectionsByteArray with Bi
       TestEngineServiceContext.dataFile.delete
 
       akka.dispatch.Await.result(client.post("/file/write")("foo"), duration)
-      client.get("/file/read") must whenDelivered {
-        beLike {
-          case HttpResponse(status, _, content, _) =>
-            (status.code must be (OK)) and
-            (content must beSome("foo"))
-        }
+      client.get("/file/read").futureValue match {
+        case HttpResponse(status, _, content, _) =>
+            status.code must be (OK)
+            content must be (Some("foo"))
+        case other => fail("Expected HttpResponse(status, _, content, _), but got: " + other)
       }
     }
 
     "return html by correct URI" in{
-      client.get("/bar/foo/adCode.html") must whenDelivered {
-        beLike {
-          case HttpResponse(status, _, content, _) =>
-            (status.code must be (OK)) and
-            (content must beSome(TestEngineServiceContext.context))
-        }
+      client.get("/bar/foo/adCode.html").futureValue match {
+        case HttpResponse(status, _, content, _) =>
+            status.code must be (OK)
+            content must be (Some(TestEngineServiceContext.context))
+        case other => fail("Expected HttpResponse(status, _, content, _), but got: " + other)
       }
     }
 
     "return NotFound when accessing a nonexistent URI" in{
       val response = Await.result(client.post("/foo/foo/adCode.html")("foo").failed, duration)
-      response must beLike { case HttpException(failure, _) => failure must_== NotFound }
+      response match {
+        case HttpException(failure, _) => failure must equal (NotFound)
+        case other => fail("Expected HttpException(failure, _), but got: " + other)
+      }
     }
     "return InternalServerError when handling request crashes" in{
       val response = Await.result(client.get("/error").failed, duration)
-      response must beLike { case HttpException(failure, _) => failure must_== InternalServerError }
+      response match {
+        case HttpException(failure, _) => failure must equal (InternalServerError)
+        case other => fail("Expected HttpException(failure, _), but got: " + other)
+      }
     }
     "return Http error when handling request throws HttpException" in {
       val response = Await.result(client.get("/http/error").failed, duration)
-      response must beLike { case HttpException(failure, _) => failure must_== BadRequest }
+      response match {
+        case HttpException(failure, _) => failure must equal (BadRequest)
+        case other => fail("Expected HttpException(failure, _), but got: " + other)
+      }
     }
 
     "return html by correct URI with parameters" in{
-      client.parameters('bar -> "zar").get("/foo") must whenDelivered {
-        beLike {
-          case HttpResponse(status, _, content, _) =>
-            (status.code must be (OK)) and
-            (content must beSome(TestEngineServiceContext.context))
-        }
+      client.parameters('bar -> "zar").get("/foo").futureValue match {
+        case HttpResponse(status, _, content, _) =>
+          status.code must be (OK)
+          content must be (Some(TestEngineServiceContext.context))
+        case other => fail("Expected HttpResponse(status, _, content, _), but got: " + other)
       }
     }
     "return huge content"in{
-      client.get[ByteChunk]("/huge") must whenDelivered {
-        beLike {
-          case HttpResponse(status, _, content, _) =>
-            (status.code must be (OK)) and
-            (content.map(v => readContent(v)) must beSome(TestEngineServiceContext.hugeContext.map(v => new String(v).mkString("")).mkString("")))
-        }
+      client.get[ByteChunk]("/huge").futureValue match {
+        case HttpResponse(status, _, content, _) =>
+          status.code must be (OK)
+          content.map(v => readContent(v)) must be (Some(TestEngineServiceContext.hugeContext.map(v => new String(v).mkString("")).mkString("")))
+        case other => fail("Expected HttpResponse(status, _, content, _), but got: " + other)
       }
     }
     "return huge delayed content"in{
       val content = client.get[ByteChunk]("/huge/delayed")
-      content must whenDelivered {
-        beLike {
-          case HttpResponse(status, _, content, _) =>
-            (status.code must be (OK)) and
-            (content.map(v => readContent(v)) must beSome(TestEngineServiceContext.hugeContext.map(v => new String(v).mkString("")).mkString("")))
-        }
+      content.futureValue match {
+        case HttpResponse(status, _, content, _) =>
+          status.code must be (OK)
+          content.map(v => readContent(v)) must be (Some(TestEngineServiceContext.hugeContext.map(v => new String(v).mkString("")).mkString("")))
+        case other => fail("Expected HttpResponse(status, _, content, _), but got: " + other)
       }
     }
     "return html by correct URI by https" in{
-      sslClient.get("/bar/foo/adCode.html") must whenDelivered {
-        beLike {
-          case HttpResponse(status, _, content, _) =>
-            content.get mustEqual(TestEngineServiceContext.context)
-        }
+      sslClient.get("/bar/foo/adCode.html").futureValue match {
+        case HttpResponse(status, _, content, _) =>
+          content.get must equal (TestEngineServiceContext.context)
+        case other => fail("Expected HttpResponse(status, _, content, _), but got: " + other)
       }
     }
     "return huge content by https"in{
-      sslClient.get[ByteChunk]("/huge") must whenDelivered {
-        beLike {
-          case HttpResponse(status, _, content, _) =>
-            (status.code must be (OK)) and
-            (content.map(v => readContent(v)) must beSome(TestEngineServiceContext.hugeContext.map(v => new String(v).mkString("")).mkString("")))
-        }
+      sslClient.get[ByteChunk]("/huge").futureValue match {
+        case HttpResponse(status, _, content, _) =>
+          status.code must be (OK)
+          content.map(v => readContent(v)) must be (Some(TestEngineServiceContext.hugeContext.map(v => new String(v).mkString("")).mkString("")))
+        case other => fail("Expected HttpResponse(status, _, content, _), but got: " + other)
       }
     }
   }
