@@ -1,6 +1,6 @@
 package blueeyes.core.service.engines.netty
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import org.jboss.netty.handler.codec.http.{HttpResponse => NettyHttpResponse}
 import org.jboss.netty.handler.stream.ChunkedInput
 import org.jboss.netty.channel._
@@ -9,7 +9,7 @@ import blueeyes.bkka.AkkaDefaults
 import akka.dispatch._
 import akka.util.Duration
 
-import blueeyes.concurrent.test.FutureMatchers
+import blueeyes.concurrent.test.AkkaFutures
 import blueeyes.core.http.MimeTypes._
 import blueeyes.core.service._
 import blueeyes.core.data.{ByteChunk, Chunk, BijectionsChunkString}
@@ -19,11 +19,12 @@ import blueeyes.core.http.HttpStatusCodes._
 import org.mockito.Mockito.{times, when}
 import scalaz.Scalaz._
 import blueeyes.core.service.NotServed
-import org.specs2.mock._
+import org.scalatest.mock.MockitoSugar
 import org.mockito.{Matchers, ArgumentMatcher}
+import org.mockito.Mockito._
 import scalaz.{Success, Validation}
 
-class HttpNettyRequestHandlerSpec extends Specification with HttpNettyConverters with Mockito with BijectionsChunkString with Logging with AkkaDefaults with FutureMatchers {
+class HttpNettyRequestHandlerSpec extends WordSpec with MustMatchers with HttpNettyConverters with MockitoSugar with BijectionsChunkString with Logging with AkkaDefaults with AkkaFutures {
   private val handler       = mock[AsyncCustomHttpService[ByteChunk]]
   private val context       = mock[ChannelHandlerContext]
   private val channel       = mock[Channel]
@@ -33,7 +34,6 @@ class HttpNettyRequestHandlerSpec extends Specification with HttpNettyConverters
   private val request       = HttpRequest[ByteChunk](HttpMethods.GET, URI("/bar/1/adCode.html"), Map[Symbol, String](), HttpHeaders.Empty, None, None, HttpVersions.`HTTP/1.0`)
   private val response      = HttpResponse[ByteChunk](HttpStatus(HttpStatusCodes.OK), Map("retry-after" -> "1"), Some(StringToChunk("12")), HttpVersions.`HTTP/1.1`)
 
-  override def is = args(sequential = true) ^ super.is
   "write OK response service when path is match" in {
     val nettyHandler  = new HttpNettyRequestHandler(handler, logger)
 
@@ -53,7 +53,7 @@ class HttpNettyRequestHandlerSpec extends Specification with HttpNettyConverters
     nettyHandler.messageReceived(context, event)
     Thread.sleep(2000)
 
-    there was one(channelFuture).addListener(ChannelFutureListener.CLOSE)
+    verify(channelFuture, times(1)).addListener(ChannelFutureListener.CLOSE)
   }
 
   "cancel Future when connection closed" in {
@@ -70,7 +70,7 @@ class HttpNettyRequestHandlerSpec extends Specification with HttpNettyConverters
 
     nettyHandler.channelDisconnected(context, stateEvent)
 
-    Await.result(promise.failed, 10 seconds) must haveSuperclass[Throwable]
+    classOf[Throwable].isAssignableFrom(Await.result(promise.failed, Duration(10, "seconds")).getClass.getSuperclass)
   }
 
   class RequestMatcher(matchingResponce: NettyHttpResponse) extends ArgumentMatcher[NettyHttpResponse] {
