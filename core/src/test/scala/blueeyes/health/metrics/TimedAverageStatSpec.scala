@@ -1,21 +1,22 @@
 package blueeyes.health.metrics
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import blueeyes.json.JsonAST._
 import java.util.concurrent.TimeUnit
 
-class TimedAverageStatSpec extends Specification with TimedStatFixtures with blueeyes.concurrent.test.FutureMatchers {
+class TimedAverageStatSpec extends WordSpec with MustMatchers with TimedStatFixtures with blueeyes.concurrent.test.AkkaFutures {
   implicit val healthMonitorTimeout = akka.util.Timeout(10000)
 
   "TimedAverageStat" should{
     "creates JValue" in{
-      val config = interval(IntervalLength(3, TimeUnit.SECONDS), 3)
+      val config = blueeyes.health.metrics.interval(IntervalLength(3, TimeUnit.SECONDS), 3)
       val timedSample = TimedAverageStat(config)
       fill(timedSample)
 
       val histogram      = timedSample.toJValue
       val histogramValue = JArray(List(JDouble(1.3333333333333333), JDouble(1.0), JDouble(0.0)))
-      histogram must whenDelivered (be_==(JObject(JField("perSecond", JObject(JField(config.toString, histogramValue) :: Nil)) :: Nil)))
+      histogram.futureValue must equal (JObject(JField("perSecond", JObject(JField(config.toString, histogramValue) :: Nil)) :: Nil))
+      //histogram must whenDelivered (be_==(JObject(JField("perSecond", JObject(JField(config.toString, histogramValue) :: Nil)) :: Nil)))
     }
   }
 
