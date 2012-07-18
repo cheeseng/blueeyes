@@ -1,17 +1,16 @@
 package blueeyes.health.metrics
 
 import blueeyes.json.JsonAST._
-import org.specs2.mutable.Specification
+import org.scalatest._
 
-class TimedEternityCountStatSpec extends Specification with TimedStatFixtures with blueeyes.concurrent.test.FutureMatchers {
+class TimedEternityCountStatSpec extends WordSpec with MustMatchers with TimedStatFixtures with blueeyes.concurrent.test.AkkaFutures {
   implicit val healthMonitorTimeout = akka.util.Timeout(10000)
 
   "EternityTimedCountStat" should{
     "creates JValue" in{
       val timedSample = TimedCountStat(eternity)
       fill(timedSample)
-
-      timedSample.toJValue must whenDelivered (be_==(JObject(JField(eternity.toString, JArray(List(JInt(4)))) :: Nil)))
+      timedSample.toJValue.futureValue must equal (JObject(JField(eternity.toString, JArray(List(JInt(4)))) :: Nil))
     }
   }
 
