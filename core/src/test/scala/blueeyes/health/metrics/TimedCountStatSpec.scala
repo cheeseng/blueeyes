@@ -1,18 +1,18 @@
 package blueeyes.health.metrics
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import blueeyes.json.JsonAST._
 import java.util.concurrent.TimeUnit
 
-class TimedCountStatSpec extends Specification with TimedStatFixtures with blueeyes.concurrent.test.FutureMatchers {
+class TimedCountStatSpec extends WordSpec with MustMatchers with TimedStatFixtures with blueeyes.concurrent.test.AkkaFutures {
   "TimedCountStat" should{
     "creates JValue" in{
-      val config      = interval(IntervalLength(3, TimeUnit.SECONDS), 3)
+      val config      = blueeyes.health.metrics.interval(IntervalLength(3, TimeUnit.SECONDS), 3)
       val timedSample = TimedCountStat(config)
       fill(timedSample)
 
       val jValue = timedSample.toJValue
-      jValue must whenDelivered (be_==(JObject(JField(config.toString, (JArray(List(JInt(4), JInt(3), JInt(0))))) :: Nil)))
+      jValue.futureValue must equal (JObject(JField(config.toString, (JArray(List(JInt(4), JInt(3), JInt(0))))) :: Nil))
     }
   }
 
