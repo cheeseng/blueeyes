@@ -1,6 +1,6 @@
 package blueeyes.core.service.test
 
-import org.specs2.mutable.Specification
+//import org.specs2.mutable.Specification
 import blueeyes.core.service._
 import akka.dispatch.Future
 import akka.dispatch.Promise
@@ -11,25 +11,29 @@ import blueeyes.core.http.MimeTypes._
 import blueeyes.core.http._
 import blueeyes.core.data.{ByteChunk, BijectionsChunkString}
 import TestService._
-import org.specs2.time.TimeConversions._
-import blueeyes.concurrent.test.FutureMatchers
+//import org.specs2.time.TimeConversions._
+import blueeyes.concurrent.test.AkkaFutures
+import org.scalatest.time._
+import org.scalatest.concurrent.Eventually
 
 
-class BlueEyesServiceSpecificationSpec extends BlueEyesServiceSpecification with TestService with BijectionsChunkString with FutureMatchers{
-  implicit val futureTimeouts = FutureTimeouts(6, 1 second)
+class BlueEyesServiceSpecificationSpec extends BlueEyesServiceSpec with Eventually with TestService with BijectionsChunkString with AkkaFutures{
+  override implicit val defaultPatience =   PatienceConfig(timeout =  Span(6, Seconds), interval = Span(1, Second))
 
   "Service Specification" should {
     "support get by valid URL" in {
-      service.get[String]("/bar/id/bar.html") must whenDelivered { be_==(serviceResponse) }
+      service.get[String]("/bar/id/bar.html").futureValue must equal (serviceResponse)
     }
 
     "support asynch get by valid URL" in {
       val result = service.get[String]("/asynch/future") 
-      result must whenDelivered { be_==(serviceResponse) }
+      result.futureValue must equal (serviceResponse)
     }
 
     "support eventually asynch get by valid URL" in {
-      service.get[String]("/asynch/eventually") must whenDelivered { be_==(serviceResponse) }
+      eventually { 
+        service.get[String]("/asynch/eventually").futureValue must equal (serviceResponse)
+      }
     }
   }
 }
