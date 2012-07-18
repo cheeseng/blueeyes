@@ -1,26 +1,26 @@
 package blueeyes.health.metrics
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import blueeyes.json.JsonAST._
 import akka.dispatch.Future
 import blueeyes.util.Clock
 import java.util.concurrent.TimeUnit
 
-class TimedSampleSpec extends Specification with TimedStatFixtures with blueeyes.concurrent.test.FutureMatchers {
+class TimedSampleSpec extends WordSpec with MustMatchers with TimedStatFixtures with blueeyes.concurrent.test.AkkaFutures {
   "TimedSample" should{
     "create histogram" in{
-      val timedSample = new TimedSampleImpl(interval(IntervalLength(3, TimeUnit.SECONDS), 7))
+      val timedSample = new TimedSampleImpl(blueeyes.health.metrics.interval(IntervalLength(3, TimeUnit.SECONDS), 7))
       fill(timedSample)
 
       val histogram = timedSample.details
-      histogram must whenDelivered (be_==(Map(96 -> 0.0, 99 -> 2.0, 102 -> 5.0, 105 -> 0.0, 108 -> 0.0, 111 -> 3.0, 114 -> 4.0)))
+      histogram.futureValue must equal (Map(96 -> 0.0, 99 -> 2.0, 102 -> 5.0, 105 -> 0.0, 108 -> 0.0, 111 -> 3.0, 114 -> 4.0))
     }
     "removes expired data" in{
-      val timedSample = new TimedSampleImpl(interval(IntervalLength(3, TimeUnit.SECONDS), 3))
+      val timedSample = new TimedSampleImpl(blueeyes.health.metrics.interval(IntervalLength(3, TimeUnit.SECONDS), 3))
       fill(timedSample)
 
       val histogram = timedSample.details
-      histogram must whenDelivered (be_==(Map(108 -> 0.0, 111 -> 3.0, 114 -> 4.0)))
+      histogram.futureValue must equal (Map(108 -> 0.0, 111 -> 3.0, 114 -> 4.0))
     }
   }
 
