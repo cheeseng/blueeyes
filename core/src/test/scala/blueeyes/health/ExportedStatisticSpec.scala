@@ -1,9 +1,9 @@
 package blueeyes.health
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import blueeyes.json.JsonAST.JInt
 
-class ExportedStatisticSpec extends Specification with blueeyes.json.Implicits{
+class ExportedStatisticSpec extends WordSpec with MustMatchers with blueeyes.json.Implicits{
   "ExportedStatistic: gets lazy value" in{
     var value: Int = 0
     def lazyF: Int = value
@@ -12,7 +12,7 @@ class ExportedStatisticSpec extends Specification with blueeyes.json.Implicits{
 
     value = 2
 
-    statistic.details must_== (2)
+    statistic.details must equal (2)
   }
   "ExportedStatistic: creates JValue" in{
     var value: Int = 0
@@ -22,6 +22,6 @@ class ExportedStatisticSpec extends Specification with blueeyes.json.Implicits{
 
     value = 1
 
-    statistic.toJValue mustEqual (JInt(1))
+    statistic.toJValue must equal (JInt(1))
   }
 }
