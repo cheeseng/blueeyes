@@ -16,7 +16,6 @@ class TimedAverageStatSpec extends WordSpec with MustMatchers with TimedStatFixt
       val histogram      = timedSample.toJValue
       val histogramValue = JArray(List(JDouble(1.3333333333333333), JDouble(1.0), JDouble(0.0)))
       histogram.futureValue must equal (JObject(JField("perSecond", JObject(JField(config.toString, histogramValue) :: Nil)) :: Nil))
-      //histogram must whenDelivered (be_==(JObject(JField("perSecond", JObject(JField(config.toString, histogramValue) :: Nil)) :: Nil)))
     }
   }
 
