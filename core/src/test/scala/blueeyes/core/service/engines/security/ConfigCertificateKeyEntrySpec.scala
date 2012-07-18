@@ -1,12 +1,11 @@
 package blueeyes.core.service.engines.security
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import org.streum.configrity.Configuration
 import org.streum.configrity.io.BlockFormat
 import org.apache.commons.codec.binary.Base64
 
-class ConfigCertificateKeyEntrySpec extends Specification with CertificateData{
-  override def is = args(sequential = true) ^ super.is
+class ConfigCertificateKeyEntrySpec extends WordSpec with MustMatchers with CertificateData{
 
   private val configuration = """
 server {
@@ -24,15 +23,15 @@ server {
     
     val entry = ConfigCertificateKeyEntry(config.detach("server"))
 
-    encode(entry.get._1.getEncoded) mustEqual (encodedPrivateKey)
-    encode(entry.get._2.getEncoded) mustEqual (encodedCertificate)
+    encode(entry.get._1.getEncoded) must equal (encodedPrivateKey)
+    encode(entry.get._2.getEncoded) must equal (encodedCertificate)
   }
   "CertificateKeyEntry must not create key and certificate when configuration is missing" in {
     val config = Configuration.parse("", BlockFormat)
 
     val entry = ConfigCertificateKeyEntry(config.detach("server"))
 
-    entry must be(None)
+    entry must be (None)
   }
 
   private def encode(content: Array[Byte]) = Base64.encodeBase64String(content).replaceAll("\r\n", "\n").trim
