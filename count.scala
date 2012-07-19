@@ -5,8 +5,9 @@ def getFileAndByteCount(srcDir: File) = {
   @tailrec
   def getFileAndByteCountAcc(dirList: Array[File], fileCount: Long, byteCount: Long): Tuple2[Long, Long] = {
     val (files, subDirs) = dirList.partition(_.isFile)
-    val newFileCount = fileCount + files.size
-    val newByteCount = byteCount + files.map { f => f.length.toLong }.foldLeft(0l) { (a, b) => a + b }
+    val classFiles = files.filter(f => f.getName.endsWith(".class"))
+    val newFileCount = fileCount + classFiles.size
+    val newByteCount = byteCount + classFiles.map { f => f.length.toLong }.foldLeft(0l) { (a, b) => a + b }
     if (subDirs.isEmpty) 
       (fileCount, byteCount)
     else 
