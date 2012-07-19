@@ -1,8 +1,8 @@
 package blueeyes.util
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 
-class SpecialCharToStringTranscoderSpec extends Specification{
+class SpecialCharToStringTranscoderSpec extends WordSpec with MustMatchers{
   val transcoder = SpecialCharToStringTranscoder({case c: Char if (c == '.' | c == '@') => new String(Array('%', c, c))},
     {case c :: Nil if (c == '%') => None
      case '%' :: List(c) => None
@@ -12,16 +12,16 @@ class SpecialCharToStringTranscoderSpec extends Specification{
   
   "SpecialCharToStringTranscoder.encode" should {
     "encode specified chars" in { 
-      transcoder.encode("@foo.baz") mustEqual ("%@@foo%..baz")
+      transcoder.encode("@foo.baz") must equal ("%@@foo%..baz")
     }
   }
   
   "SpecialCharToStringTranscoder.decode" should {
     "decode specified chars" in { 
-      transcoder.decode("%@@foo%..baz") mustEqual ("@foo.baz")
+      transcoder.decode("%@@foo%..baz") must equal ("@foo.baz")
     }
     "decode incomple chars" in {
-      transcoder.decode("%@foo%..baz%.") mustEqual ("%@foo.baz%.")
+      transcoder.decode("%@foo%..baz%.") must equal ("%@foo.baz%.")
     }
   }
 }
