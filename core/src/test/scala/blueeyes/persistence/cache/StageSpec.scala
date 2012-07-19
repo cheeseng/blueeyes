@@ -1,7 +1,8 @@
 package blueeyes.persistence.cache
 
-import org.specs2.mutable.Specification
-import org.specs2.time.TimeConversions._
+import org.scalatest._
+import org.scalatest.time._
+import org.scalatest.concurrent._
 import java.util.concurrent.TimeUnit.{MILLISECONDS}
 
 
@@ -19,9 +20,11 @@ import akka.util.Timeout
 
 import java.util.concurrent.TimeUnit
 
-class StageSpec extends Specification with AkkaDefaults {
+class StageSpec extends WordSpec with MustMatchers with Eventually with AkkaDefaults {
   private val random    = new Random()
-  implicit val timeout = Timeout(100000)
+  implicit val timeout = akka.util.Timeout(100000)
+  override implicit val patienceConfig =
+    PatienceConfig(timeout = scaled(Span(100, Seconds)), interval = scaled(Span(100, Millis)))
   implicit val StringSemigroup = new Semigroup[String] {
     def append(s1: String, s2: => String) = s1 + s2
   }
@@ -35,11 +38,11 @@ class StageSpec extends Specification with AkkaDefaults {
       stage.put("foo", "bar")
       stage.put("bar", "baz")
 
-      (evicted must eventually (beTrue))
+      eventually { evicted must be (true) }
 
       // because the eventually matcher reevaluates the LHS, use two lines so that stop only is called once
       val stopFuture = stage.stop(timeout)
-      stopFuture.isCompleted must eventually (beTrue)
+      eventually { stopFuture.isCompleted must be (true) }
     }
 
     "evict when stage is over capacity" in{
@@ -49,11 +52,11 @@ class StageSpec extends Specification with AkkaDefaults {
       stage.put("foo2", "bar2")
       stage.put("bar2", "baz2")
 
-      (evicted must eventually (beTrue))
+      eventually { evicted must be (true) }
 
       // because the eventually matcher reevaluates the LHS, use two lines so that stop only is called once
       val stopFuture = stage.stop(timeout)
-      stopFuture.isCompleted must eventually (beTrue)
+      eventually { stopFuture.isCompleted must be (true) }
     }
 
     "evict when stage is flushed" in{
@@ -63,11 +66,11 @@ class StageSpec extends Specification with AkkaDefaults {
       stage.put("foo3", "bar3")
       stage.flushAll(timeout)
 
-      (evicted must eventually (beTrue))
+      eventually { evicted must be (true) }
 
       // because the eventually matcher reevaluates the LHS, use two lines so that stop only is called once
       val stopFuture = stage.stop(timeout)
-      stopFuture.isCompleted must eventually (beTrue)
+      eventually { stopFuture.isCompleted must be (true) }
     }
 
     "evict automatically" in{
@@ -76,11 +79,11 @@ class StageSpec extends Specification with AkkaDefaults {
       val stage = newStage(Some(10), None, (key: String, value: String) => evicted = key == "foo4" && value == "bar4")
       stage.put("foo4", "bar4")
 
-      (evicted must eventually (beTrue))
+      eventually { evicted must be (true) }
 
       // because the eventually matcher reevaluates the LHS, use two lines so that stop only is called once
       val stopFuture = stage.stop(timeout)
-      stopFuture.isCompleted must eventually (beTrue)
+      eventually { stopFuture.isCompleted must be (true) }
     }
 
     "evict automatically more then one time" in{
@@ -90,15 +93,15 @@ class StageSpec extends Specification with AkkaDefaults {
 
       stage.put("foo", "bar")
 
-      (evictCount must eventually (beEqualTo(1)))
+      eventually { evictCount must be (1) }
 
       stage.put("foo", "bar")
 
-      (evictCount must eventually (beEqualTo(2)))
+      eventually { evictCount must equal (2) }
 
       // because the eventually matcher reevaluates the LHS, use two lines so that stop only is called once
       val stopFuture = stage.stop(timeout)
-      stopFuture.isCompleted must eventually (beTrue)
+      eventually { stopFuture.isCompleted must be (true) }
     }
 
     // this test runs for a really long time
@@ -113,18 +116,18 @@ class StageSpec extends Specification with AkkaDefaults {
       }
 
       val futures   = Future.sequence(actors.map(actor => (actor ? "Send").mapTo[Unit]))
-      futures.value must eventually(200, 300.milliseconds) (beSome)
+      eventually { futures.value.isDefined must be (true) }
 
       val flushFuture = stage.flushAll(timeout)
-      flushFuture.value must eventually (beSome)
+      eventually { flushFuture.value.isDefined must be (true) }
 
-      collected mustEqual(messagesCount * threadsCount)
+      collected must equal (messagesCount * threadsCount)
 
       actors.foreach(_ ! _root_.akka.actor.PoisonPill)
       
       // because the eventually matcher reevaluates the LHS, use two lines so that stop only is called once
       val stopFuture = stage.stop(timeout)
-      stopFuture.isCompleted must eventually (beTrue)
+      eventually { stopFuture.isCompleted must be (true) }
     }
 
     // this test runs for a really long time
@@ -148,18 +151,18 @@ class StageSpec extends Specification with AkkaDefaults {
       }
 
       val futures = Future.sequence(actors.map(actor => (actor ? "Send").mapTo[Unit]))
-      (futures.value must eventually(500, 300.milliseconds) (beSome))
+      eventually { futures.value.isDefined must be (true) }
 
       val flushFuture = stage.flushAll(timeout)
-      (flushFuture.value must eventually (beSome))
+      eventually { flushFuture.value.isDefined must be (true) }
 
-      collected mustEqual(Map[String, Int](messages.distinct.map(v => (v(0), threadsPerMessagesType * messagesCount)): _*))
+      collected must equal(Map[String, Int](messages.distinct.map(v => (v(0), threadsPerMessagesType * messagesCount)): _*))
 
       actors.foreach(_ ! _root_.akka.actor.PoisonPill)
       
       // because the eventually matcher reevaluates the LHS, use two lines so that stop only is called once
       val stopFuture = stage.stop(timeout)
-      stopFuture.isCompleted must eventually (beTrue)
+      eventually { stopFuture.isCompleted must be (true) }
     }
   }
 
