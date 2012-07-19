@@ -1,12 +1,12 @@
 package blueeyes.persistence.cache
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 
-class LRUMapSpec extends Specification{
+class LRUMapSpec extends WordSpec with MustMatchers{
   "LRUMap.put: adds new value" in {
     val map = newMap()
     map.put("foo", "bar")
-    map.get("foo") mustEqual("bar")
+    map.get("foo") must equal ("bar")
   }
   "LRUMap.put: evict eldest entry" in {
     var evicted = false
@@ -14,27 +14,27 @@ class LRUMapSpec extends Specification{
     map.put("foo", "bar")
     map.put("baz", "foo")
 
-    evicted        must be_==(true)
+    evicted        must equal (true)
     map.get("foo") must be  (null)
-    map.get("baz") mustEqual("foo")
+    map.get("baz") must equal ("foo")
   }
   "LRUMap.remove: removes entry and decrement Total Weight" in {
     val map = newMap()
     map.put("foo", "bar")
-    map.remove("foo") mustEqual ("bar")
+    map.remove("foo") must equal ("bar")
     map.put("baz", "foo")
 
     map.get("foo") must be  (null)
-    map.get("baz") mustEqual("foo")
+    map.get("baz") must equal("foo")
   }
   "LRUMap.remove(key, value): removes entry and decrement Total Weight" in {
     val map = newMap()
     map.put("foo", "bar")
-    map.remove("foo", "bar") mustEqual (true)
+    map.remove("foo", "bar") must equal (true)
     map.put("baz", "foo")
 
     map.get("foo") must be  (null)
-    map.get("baz") mustEqual("foo")
+    map.get("baz") must equal("foo")
   }
   "LRUMap.clear: clears map and decrement Total Weight" in {
     val map = newMap()
@@ -43,7 +43,7 @@ class LRUMapSpec extends Specification{
     map.put("baz", "foo")
 
     map.get("foo") must be  (null)
-    map.get("baz") mustEqual("foo")
+    map.get("baz") must equal ("foo")
   }
   "LRUMap.putIfAbsent: does not add existing key" in {
     val map = newMap()
