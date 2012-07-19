@@ -1,27 +1,27 @@
 package blueeyes.util
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 
-class SpecialCharTranscoderSpec extends Specification{
+class SpecialCharTranscoderSpec extends WordSpec with MustMatchers {
   val transcoder = SpecialCharTranscoder.fromMap('_', Map('.' -> 'd', '@' -> 'a'))
   
   "SpecialCharTranscoder.encode" should {
     "encode specified chars" in { 
-      transcoder.encode("@foo.baz") mustEqual ("_afoo_dbaz")
+      transcoder.encode("@foo.baz") must equal ("_afoo_dbaz")
     }
     
     "encode escape char" in {
-      transcoder.encode("_@_") mustEqual ("___a__")
+      transcoder.encode("_@_") must equal ("___a__")
     }
   }
   
   "SpecialCharTranscoder.decode" should {
     "decode specified chars" in { 
-      transcoder.decode("_afoo_dbaz") mustEqual ("@foo.baz")
+      transcoder.decode("_afoo_dbaz") must equal ("@foo.baz")
     }
     
     "decode escape char" in {
-      transcoder.decode("___a__") mustEqual ("_@_")
+      transcoder.decode("___a__") must equal ("_@_")
     }
   }
 }
