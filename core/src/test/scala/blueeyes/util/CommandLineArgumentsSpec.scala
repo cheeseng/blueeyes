@@ -1,40 +1,40 @@
 package blueeyes.util
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 
-class CommandLineArgumentsSpec extends Specification {
+class CommandLineArgumentsSpec extends WordSpec with MustMatchers {
   "No parameters or values should be parsed properly" in {
     val c = CommandLineArguments()
     
-    c.parameters.size mustEqual(0)
-    c.values.length mustEqual(0)
+    c.parameters.size must equal (0)
+    c.values.length must equal (0)
   }
   
   "Several parameters should be parsed properly" in {
     val c = CommandLineArguments("--foo", "bar", "--bar", "baz")
     
-    c.parameters mustEqual Map(
+    c.parameters must equal (Map(
       "foo" -> "bar",
       "bar" -> "baz"
-    )
+    ))
   }
   
   "Values combined with parameters should be parsed properly" in {
     val c = CommandLineArguments("baz", "--foo", "bar", "bar")
     
-    c.parameters mustEqual Map("foo" -> "bar")
-    c.values mustEqual List("baz", "bar")
+    c.parameters must equal (Map("foo" -> "bar"))
+    c.values must equal (List("baz", "bar"))
   }
   
   "Parameters without values should have empty value strings" in {
     val c = CommandLineArguments("--baz", "--foo")
     
-    c.parameters mustEqual Map("baz" -> "", "foo" -> "")
+    c.parameters must equal (Map("baz" -> "", "foo" -> ""))
   }
   
   "Values combined with parameters should be counted properly" in {
     val c = CommandLineArguments("baz", "--foo", "bar", "bar")
     
-    c.size mustEqual 3
+    c.size must equal (3)
   }
 }
