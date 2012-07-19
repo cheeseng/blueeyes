@@ -13,8 +13,6 @@ import akka.pattern.ask
 import akka.util.Timeout
 import blueeyes.bkka.AkkaDefaults
 
-import org.specs2.time.TimeConversions._
-
 object StageProfile extends AkkaDefaults {
   private val random    = new Random()
   implicit val StringSemigroup = new Semigroup[String] {
