@@ -1,9 +1,9 @@
 package blueeyes.persistence.cache
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import java.util.concurrent.TimeUnit.{NANOSECONDS}
 
-class ExpirationTaskSpec extends Specification{
+class ExpirationTaskSpec extends WordSpec with MustMatchers{
   private val expirable = Expirable("foo", "bar", ExpirationPolicy(None, None, NANOSECONDS))
 
   "ExpirationTask: expirable is not evicted when hasExpired is 'false'" in{
@@ -11,13 +11,13 @@ class ExpirationTaskSpec extends Specification{
 
     new ExpirationTask(expirable, {hasExpired: Expirable[String, String] => true}, {evict: Expirable[String, String] => evicted = true}).run()
 
-    evicted must be_==(true)
+    evicted must equal (true)
   }
   "ExpirationTask: expirable is evicted when hasExpired is 'true'" in{
     var evicted = false
 
     new ExpirationTask(expirable, {hasExpired: Expirable[String, String] => false}, {evict: Expirable[String, String] => evicted = true}).run()
 
-    evicted must be_==(false)
+    evicted must equal (false)
   }
 }
