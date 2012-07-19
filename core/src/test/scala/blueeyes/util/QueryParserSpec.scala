@@ -17,9 +17,6 @@ class QueryParserSpec extends WordSpec with MustMatchers {
     params must contain key ('b)
     params('a) must equal ("1")
     params('b) must equal ("2")
-    
-    //params must (haveKey('a) and haveKey('b))
-    //params must (havePair(('a, "1")) and havePair(('b, "2")))
     unparseQuery(params) must equal (queryParams)
   }
 
@@ -28,7 +25,6 @@ class QueryParserSpec extends WordSpec with MustMatchers {
     val query = URI.create(baseURI + queryParams).getRawQuery()
     var params = parseQuery(query)
     params must contain key ('usermode)
-    //params must haveKey('usermode)
     unparseQuery(params) must equal (queryParams)
   }
 
@@ -46,7 +42,6 @@ class QueryParserSpec extends WordSpec with MustMatchers {
     var params = parseQuery(query)
     params must contain key ('flag)
     params('flag) must equal ("true")
-    //params must havePairs(('flag, "true"))
     unparseQuery(params) must equal (queryParams)
   }
 
@@ -56,7 +51,6 @@ class QueryParserSpec extends WordSpec with MustMatchers {
     var params = parseQuery(query)
     params must contain key ('flag)
     params('flag) must equal ("true")
-    //params must havePair(('flag, "true"))
     unparseQuery(params) must equal (queryParams)
   }
 
@@ -68,7 +62,6 @@ class QueryParserSpec extends WordSpec with MustMatchers {
     params('flag) must equal ("true")
     params must contain key (Symbol("path?"))
     params(Symbol("path?")) must equal ("foo")
-    //params must (havePair(('flag, "true")) and havePair((Symbol("path?"), "foo")))
     unparseQuery(params) must equal (queryParams)
   }
 
@@ -80,7 +73,6 @@ class QueryParserSpec extends WordSpec with MustMatchers {
     params('flag) must equal ("true")
     params must contain key (Symbol("path??path2"))
     params(Symbol("path??path2")) must equal ("")
-    //params must (havePair(('flag, "true")) and havePair((Symbol("path??path2"), "")))
     unparseQuery(params) must equal (queryParams)
   }
 
@@ -92,7 +84,6 @@ class QueryParserSpec extends WordSpec with MustMatchers {
     params('flag) must equal ("true")
     params must contain key ('foo)
     params('foo) must equal ("bar")
-    //params must (havePair(('flag, "true")) and havePair(('foo, "bar")))
     unparseQuery(params) must equal (queryParams.replace("&&", "&"))
   }
 
@@ -102,7 +93,6 @@ class QueryParserSpec extends WordSpec with MustMatchers {
     var params = parseQuery(query)
     params must contain key ('site)
     params('site) must equal ("http://www.google.com?search=blah")
-    //params must havePair(('site, "http://www.google.com?search=blah"))
     unparseQuery(params) must equal (queryParams)
   }
 }
