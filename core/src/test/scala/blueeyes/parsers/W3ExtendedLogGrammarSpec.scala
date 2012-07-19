@@ -5,10 +5,10 @@ import org.scalacheck.Gen
 import org.scalacheck.Prop.forAllNoShrink
 import W3ExtendedLogAST._
 import W3ExtendedLogGen._
-import org.specs2.mutable.Specification
-import org.specs2.ScalaCheck
+import org.scalatest._
+import org.scalatest.prop.Checkers
 
-class W3ExtendedLogGrammarSpec extends Specification with ScalaCheck{
+class W3ExtendedLogGrammarSpec extends WordSpec with MustMatchers with Checkers{
   implicit def stringToInput(s: String) = new CharSequenceReader(s)
 
   "W3ExtendedLogGrammar: parses Version" in {
@@ -41,7 +41,7 @@ class W3ExtendedLogGrammarSpec extends Specification with ScalaCheck{
     passTest(directives, "\n")
   }
 
-  private def passTest(gen: Gen[String], delim: String = "") = forAllNoShrink(gen)(n => >>(W3ExtendedLog(n), delim) must_== n)
+  private def passTest(gen: Gen[String], delim: String = "") = forAllNoShrink(gen)(n => >>(W3ExtendedLog(n), delim) == n)
 
   def >> (directives : List[Directive], delim: String) = directives.map(_.toString).mkString(delim)
 }
