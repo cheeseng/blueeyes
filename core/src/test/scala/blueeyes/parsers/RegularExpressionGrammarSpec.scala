@@ -1,7 +1,7 @@
 package blueeyes.parsers
 
-import org.specs2.mutable.Specification
-import org.specs2.ScalaCheck
+import org.scalatest._
+import org.scalatest.prop.Checkers
 import org.scalacheck._
 import org.scalacheck.Prop.forAllNoShrink
 import scala.util.parsing.combinator._
@@ -9,7 +9,7 @@ import scala.util.parsing.input._
 import RegularExpressionAST.RegexAtom
 import RegexpGen._
 
-class RegularExpressionGrammarSpec extends Specification with ScalaCheck{
+class RegularExpressionGrammarSpec extends WordSpec with MustMatchers with Checkers{
 
   implicit def stringToInput(s: String) = new CharSequenceReader(s)
 
@@ -99,12 +99,12 @@ class RegularExpressionGrammarSpec extends Specification with ScalaCheck{
     }
 
     "Regression 1" in {
-      RegularExpressionPatten.isDefinedAt("""(?<prefixPath>(?:[^\n.](?:[^\n/]|/[^\n\.])+)/?)?""") must beTrue
+      RegularExpressionPatten.isDefinedAt("""(?<prefixPath>(?:[^\n.](?:[^\n/]|/[^\n\.])+)/?)?""") must be (true)
     }
   }
 
-  private def passTest(gen: Gen[String]) = forAllNoShrink(gen)(n => >>(RegularExpressionPatten(n)) mustEqual  n)
-  private def passTestCaseInsensitive(gen: Gen[String]) = forAllNoShrink(gen)(n => >>(RegularExpressionPatten(n)).toLowerCase mustEqual n.toLowerCase)
+  private def passTest(gen: Gen[String]) = forAllNoShrink(gen)(n => >>(RegularExpressionPatten(n)) == n)
+  private def passTestCaseInsensitive(gen: Gen[String]) = forAllNoShrink(gen)(n => >>(RegularExpressionPatten(n)).toLowerCase == n.toLowerCase)
 
   def >> (regexp : List[RegexAtom]): String = regexp.map(_.toString).mkString("")
 }
