@@ -1,12 +1,12 @@
 package blueeyes.util.logging
 
 import RollPolicies._
-import org.specs2.mutable.Specification
+import org.scalatest._
 import java.util.Date
 import java.text.SimpleDateFormat
 import java.text.ParseException
 
-class NameFormatSpec extends Specification with NameFormat{
+class NameFormatSpec extends WordSpec with MustMatchers with NameFormat{
   private val baseName = "w3.log"
   "NameFormat: formats name with Never policy" in{
     checkName(Never, new SimpleDateFormat("yyyy"))
@@ -23,6 +23,11 @@ class NameFormatSpec extends Specification with NameFormat{
 
   private def checkName(policy: Policy, format: SimpleDateFormat) = {
     val name = timedName(baseName, policy, 0)
-    format.parse(name.substring(3, name.length - 4)) must not(throwAn[ParseException])
+    try {
+      format.parse(name.substring(3, name.length - 4))
+    }
+    catch {
+      case pe: ParseException => fail("Expected not to throw ParseException, but it does.")
+    }
   }
 }
