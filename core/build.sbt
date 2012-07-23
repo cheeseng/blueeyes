@@ -15,7 +15,8 @@ libraryDependencies ++= Seq(
   "org.scala-tools.testing"     %  "scalacheck_2.9.1"   % "1.9"            % "test",
   "javax.servlet"               % "javax.servlet-api"   % "3.0.1",
   "org.eclipse.jetty"           % "jetty-server"        % "8.1.3.v20120416"          % "test",
-  "org.eclipse.jetty"           % "jetty-servlet"       % "8.1.3.v20120416"          % "test"
+  "org.eclipse.jetty"           % "jetty-servlet"       % "8.1.3.v20120416"          % "test", 
+  "org.scalatest"               %% "scalatest"          % "2.0.M2"         % "provided"
 )
 
 ivyXML := 
