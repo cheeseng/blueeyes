@@ -1,15 +1,15 @@
 package blueeyes.persistence.mongo
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import MongoQueryBuilder._
 import MongoFilterBuilder._
 import MongoFilterOperators._
 import blueeyes.json.JPath
 
-class MongoDistinctQuerySpec extends Specification{
+class MongoDistinctQuerySpec extends WordSpec with MustMatchers{
   "'where' method sets new filter" in {
     val query = distinct("foo").from("collection")
     
-    query.where("name" === "Joe") mustEqual (MongoDistinctQuery(JPath("foo"), "collection", Some(MongoFieldFilter("name", $eq, "Joe"))))
+    query.where("name" === "Joe") must equal (MongoDistinctQuery(JPath("foo"), "collection", Some(MongoFieldFilter("name", $eq, "Joe"))))
   }
 }
