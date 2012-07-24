@@ -9,10 +9,10 @@ import MongoFilterOperators._
 import blueeyes.json.JsonAST._
 import blueeyes.json._
 import MongoFilterImplicits._
-import org.specs2.mutable.Specification
-import org.specs2.ScalaCheck
+import org.scalatest._
+import org.scalatest.prop.Checkers
 
-class MongoOrFilterSpec extends Specification with ScalaCheck with MongoImplicits with ArbitraryJValue with ArbitraryMongo{
+class MongoOrFilterSpec extends WordSpec with MustMatchers with Checkers with MongoImplicits with ArbitraryJValue with ArbitraryMongo{
   private val filter1  = MongoFilterBuilder(JPath("foo")).>(MongoPrimitiveInt(1))
   private val filter2  = MongoFilterBuilder(JPath("bar")).<(MongoPrimitiveInt(5))
   private val filter3  = MongoFilterBuilder(JPath("baz")).>(MongoPrimitiveInt(1))
@@ -42,25 +42,25 @@ class MongoOrFilterSpec extends Specification with ScalaCheck with MongoImplicit
     }
 
     "create valid json for or filter" in {
-      (orFilter).filter mustEqual (JObject(JField("$or", JArray(filter1.filter :: filter2.filter :: Nil)) :: Nil))
-      (orFilter | (filter3 | filter4)).filter mustEqual (JObject(JField("$or", JArray(filter1.filter :: filter2.filter :: filter3.filter :: filter4.filter :: Nil)) :: Nil))
-      (orFilter | filter3).filter mustEqual (JObject(JField("$or", JArray(filter1.filter :: filter2.filter :: filter3.filter :: Nil)) :: Nil))
-      (filter3 | orFilter).filter mustEqual (JObject(JField("$or", JArray(filter3.filter :: filter1.filter :: filter2.filter :: Nil)) :: Nil))
+      (orFilter).filter must equal (JObject(JField("$or", JArray(filter1.filter :: filter2.filter :: Nil)) :: Nil))
+      (orFilter | (filter3 | filter4)).filter must equal (JObject(JField("$or", JArray(filter1.filter :: filter2.filter :: filter3.filter :: filter4.filter :: Nil)) :: Nil))
+      (orFilter | filter3).filter must equal (JObject(JField("$or", JArray(filter1.filter :: filter2.filter :: filter3.filter :: Nil)) :: Nil))
+      (filter3 | orFilter).filter must equal (JObject(JField("$or", JArray(filter3.filter :: filter1.filter :: filter2.filter :: Nil)) :: Nil))
     }
     "unary_! use 'and' use with negative operators of subfilters " in{
-      (orFilter).unary_! mustEqual (filter1.unary_! && filter2.unary_!)
+      (orFilter).unary_! must equal (filter1.unary_! && filter2.unary_!)
     }
     "several or does not create recursion" in{
-      ("address.city" === "B") || ( ("address.street" === "2") || ("address.code" === 1) ) mustEqual (MongoOrFilter(List(("address.city" === "B"), ("address.street" === "2"), ("address.code" === 1))))
-      ("address.city" === "B") || ("address.street" === "2") || ("address.code" === 1) mustEqual (MongoOrFilter(List(("address.city" === "B"), ("address.street" === "2"), ("address.code" === 1))))
+      ("address.city" === "B") || ( ("address.street" === "2") || ("address.code" === 1) ) must equal (MongoOrFilter(List(("address.city" === "B"), ("address.street" === "2"), ("address.code" === 1))))
+      ("address.city" === "B") || ("address.street" === "2") || ("address.code" === 1) must equal (MongoOrFilter(List(("address.city" === "B"), ("address.street" === "2"), ("address.code" === 1))))
     }
 
     "2 unary_! results to the same filter" in{
-      (orFilter).unary_!.unary_! mustEqual (orFilter)
+      (orFilter).unary_!.unary_! must equal (orFilter)
     }
     "or with MongoFilterAll return filter" in{
-      MongoFilterAll || filter1 mustEqual (filter1)
-      filter1 || MongoFilterAll mustEqual (filter1)
+      MongoFilterAll || filter1 must equal (filter1)
+      filter1 || MongoFilterAll must equal (filter1)
     }
   }
 }
