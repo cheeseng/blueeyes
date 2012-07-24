@@ -8,10 +8,10 @@ import org.scalacheck.Prop._
 import blueeyes.json.JsonAST._
 import blueeyes.json._
 import MongoFilterImplicits._
-import org.specs2.mutable.Specification
-import org.specs2.ScalaCheck
+import org.scalatest._
+import org.scalatest.prop.Checkers
 
-class MongoAndFilterSpec extends Specification with ScalaCheck with MongoImplicits with ArbitraryJValue with ArbitraryMongo{
+class MongoAndFilterSpec extends WordSpec with MustMatchers with Checkers with MongoImplicits with ArbitraryJValue with ArbitraryMongo{
   private val filter1    = MongoFilterBuilder(JPath("foo")).>(MongoPrimitiveInt(1))
   private val filter2    = MongoFilterBuilder(JPath("bar")).<(MongoPrimitiveInt(5))
   private val filter3    = MongoFilterBuilder(JPath("rar")).<(MongoPrimitiveInt(6))
@@ -39,17 +39,17 @@ class MongoAndFilterSpec extends Specification with ScalaCheck with MongoImplici
     }
 
     "create valid json for or filter" in {
-      (andFilter).filter mustEqual (JObject(filter1.filter.asInstanceOf[JObject].fields ++ filter2.filter.asInstanceOf[JObject].fields))
-      (andFilter && filter3).filter mustEqual (JObject(filter1.filter.asInstanceOf[JObject].fields ++ filter2.filter.asInstanceOf[JObject].fields ++ filter3.filter.asInstanceOf[JObject].fields))
-      (filter3 && andFilter).filter mustEqual (JObject(filter3.filter.asInstanceOf[JObject].fields ++ filter2.filter.asInstanceOf[JObject].fields ++ filter1.filter.asInstanceOf[JObject].fields))
-      (andFilter && (filter3 && filter4)).filter mustEqual (JObject(filter1.filter.asInstanceOf[JObject].fields ++ filter2.filter.asInstanceOf[JObject].fields ++ filter3.filter.asInstanceOf[JObject].fields ++ filter4.filter.asInstanceOf[JObject].fields))
+      (andFilter).filter must equal (JObject(filter1.filter.asInstanceOf[JObject].fields ++ filter2.filter.asInstanceOf[JObject].fields))
+      (andFilter && filter3).filter must equal (JObject(filter1.filter.asInstanceOf[JObject].fields ++ filter2.filter.asInstanceOf[JObject].fields ++ filter3.filter.asInstanceOf[JObject].fields))
+      (filter3 && andFilter).filter must equal (JObject(filter3.filter.asInstanceOf[JObject].fields ++ filter2.filter.asInstanceOf[JObject].fields ++ filter1.filter.asInstanceOf[JObject].fields))
+      (andFilter && (filter3 && filter4)).filter must equal (JObject(filter1.filter.asInstanceOf[JObject].fields ++ filter2.filter.asInstanceOf[JObject].fields ++ filter3.filter.asInstanceOf[JObject].fields ++ filter4.filter.asInstanceOf[JObject].fields))
     }
     "create valid json for AND filter with $eq filter" in {
-      (("foo" === 1) && ("foo" !== 2)).filter mustEqual(JObject(JField("foo", JInt(1)) :: JField("foo", JObject(JField("$ne", JInt(2)) :: Nil)) :: Nil))
+      (("foo" === 1) && ("foo" !== 2)).filter must equal (JObject(JField("foo", JInt(1)) :: JField("foo", JObject(JField("$ne", JInt(2)) :: Nil)) :: Nil))
     }
 
     "combine with filter3 to create a new filter" in {
-      (andFilter && filter3).filter mustEqual (JObject(filter1.filter.asInstanceOf[JObject].fields ++
+      (andFilter && filter3).filter must equal (JObject(filter1.filter.asInstanceOf[JObject].fields ++
         filter2.filter.asInstanceOf[JObject].fields ++
         filter3.filter.asInstanceOf[JObject].fields))
     }
@@ -57,8 +57,7 @@ class MongoAndFilterSpec extends Specification with ScalaCheck with MongoImplici
     "combine ANDs with ORs" in {
       val exam: MongoFilter = ("address.city" === "B") ||  ("address.street" === "2") || ("address.code" === 1)
       val cfilter: MongoFilter = ((filter1 && filter2 && filter3) || (filter2 && filter3) || (filter1 && filter3)) //|| (filter1 && filter2)
-      cfilter.filter mustEqual
-      JsonParser.parse("""
+      cfilter.filter must equal (JsonParser.parse("""
          {
         "$or":[{
           "foo":{
@@ -86,20 +85,20 @@ class MongoAndFilterSpec extends Specification with ScalaCheck with MongoImplici
           }
         }]
       }
-    """)
+    """))
     }
 
     "unary_! use 'or' use with negative operators of subfilters " in{
-      (andFilter).unary_! mustEqual (filter1.unary_! || filter2.unary_!)
+      (andFilter).unary_! must equal (filter1.unary_! || filter2.unary_!)
     }
 
     "2 unary_! result to the same filter" in{
-      (andFilter).unary_!.unary_! mustEqual (andFilter)
+      (andFilter).unary_!.unary_! must equal (andFilter)
     }
 
     "and with MongoFilterAll return filter" in{
-      (MongoFilterAll && filter2).filter mustEqual (filter2.filter)
-      (filter2 && MongoFilterAll).filter mustEqual (filter2.filter)
+      (MongoFilterAll && filter2).filter must equal (filter2.filter)
+      (filter2 && MongoFilterAll).filter must equal (filter2.filter)
     }
   }
 }
