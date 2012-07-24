@@ -1,9 +1,9 @@
 package blueeyes.persistence.mongo
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import MongoFilterOperators._
 
-class MongoFilterOperatorSpec extends Specification{
+class MongoFilterOperatorSpec extends WordSpec with MustMatchers {
   "$gt opposite operator is $lte" in {
     $gt.unary_! must be ($lte)
   }
@@ -23,18 +23,18 @@ class MongoFilterOperatorSpec extends Specification{
     $in.unary_! must be ($nin)
   }
   "$mod does not have a negation" in {
-    $mod.unary_! must throwAn[java.lang.RuntimeException]
+    intercept[java.lang.RuntimeException] { $mod.unary_! }
   }
   "$all does not have a negation" in {
-    $all.unary_! must throwAn[java.lang.RuntimeException]
+    intercept[java.lang.RuntimeException] { $all.unary_! } 
   }
   "$size does not have a negation" in {
-    $size.unary_! must throwAn[java.lang.RuntimeException]
+    intercept[java.lang.RuntimeException] { $size.unary_! } 
   }
   "$type does not have a negation" in {
-    $type.unary_! must throwAn[java.lang.RuntimeException]
+    intercept[java.lang.RuntimeException] { $type.unary_! } 
   }
   "$or does not have a negation" in {
-    $or.unary_! must throwAn[java.lang.RuntimeException]
+    intercept[java.lang.RuntimeException] { $or.unary_! }
   }
 }
