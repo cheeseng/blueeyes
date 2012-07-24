@@ -13,11 +13,11 @@ import MongoFilterImplicits._
 import akka.dispatch.Future
 import scalaz._
 import Scalaz._
-import org.specs2.mutable.Specification
-import org.specs2.ScalaCheck
+import org.scalatest.WordSpec
+import org.scalatest.prop.Checkers
 import akka.util.Timeout
 
-class MongoPatchesSpec extends Specification with ScalaCheck with MongoImplicits with ArbitraryJValue with ArbitraryMongo with blueeyes.bkka.AkkaDefaults {
+class MongoPatchesSpec extends WordSpec with Checkers with MongoImplicits with ArbitraryJValue with ArbitraryMongo with blueeyes.bkka.AkkaDefaults {
   implicit val queryTimeout = Timeout(10 * 60 * 1000)
 
   def getPatch = for{
