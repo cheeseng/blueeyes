@@ -1,13 +1,13 @@
 package blueeyes.persistence.mongo
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import MongoQueryBuilder._
 import MongoFilterOperators._
 
-class MongoCountQuerySpec extends Specification{
+class MongoCountQuerySpec extends WordSpec with MustMatchers{
   private val query = count.from(MongoCollectionReference("collection"))
 
   "'where' method sets new filter" in {
-    query.where("name" === "Joe") mustEqual ( MongoCountQuery("collection", Some(MongoFieldFilter("name", $eq, "Joe"))) )
+    query.where("name" === "Joe") must equal ( MongoCountQuery("collection", Some(MongoFieldFilter("name", $eq, "Joe"))) )
   }
 }
