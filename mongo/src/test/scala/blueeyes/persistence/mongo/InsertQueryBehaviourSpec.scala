@@ -1,19 +1,20 @@
 package blueeyes.persistence.mongo
 
-import org.specs2.mutable.Specification
+import org.scalatest._
+import org.scalatest.mock.MockitoSugar
 import MongoQueryBuilder._
 import blueeyes.json.JsonAST._
-import org.specs2.mock.Mockito
+import org.mockito.Mockito._
 
-class InsertQueryBehaviourSpec extends Specification with Mockito {
+class InsertQueryBehaviourSpec extends WordSpec with MustMatchers with MockitoSugar {
   private val jObject = JObject(JField("address", JObject( JField("city", JString("London")) :: JField("street", JString("Regents Park Road")) ::  Nil)) :: Nil)
   "Call collection method" in{
     val collection  = mock[DatabaseCollection]
-    collection.getLastError returns None
+    when(collection.getLastError) thenReturn None
 
     val query  = insert(jObject).into("collection")
     query(collection)
 
-    there was one(collection).insert(jObject :: Nil)
+    verify(collection, times(1)).insert(jObject :: Nil)
   }
 }
