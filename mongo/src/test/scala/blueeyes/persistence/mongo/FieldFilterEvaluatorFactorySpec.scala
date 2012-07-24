@@ -1,11 +1,11 @@
 package blueeyes.persistence.mongo
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import blueeyes.persistence.mongo.MongoFilterOperators._
 import Evaluators._
 import blueeyes.json.JPathImplicits
 
-class FieldFilterEvaluatorFactorySpec extends Specification with JPathImplicits{
+class FieldFilterEvaluatorFactorySpec extends WordSpec with MustMatchers with JPathImplicits{
   "creates $eq Evaluator" in {
     FieldFilterEvaluatorFactory("foo", $eq) must be (EqFieldFilterEvaluator)
   }
