@@ -1,68 +1,68 @@
 package blueeyes.persistence.mongo
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import MongoQueryBuilder._
 import blueeyes.json.JPath
 import blueeyes.json.JsonAST._
 
-class MongoQueryBuilderSpec  extends Specification{
+class MongoQueryBuilderSpec extends WordSpec with MustMatchers{
   private val jObject = JObject(JField("Foo", JString("bar")) :: Nil)
 
   "creates select query" in{
-    select("foo", "bar").from("collection") mustEqual ( MongoSelectQuery(MongoSelection(Set(JPath("foo"), JPath("bar"))), "collection") )
+    select("foo", "bar").from("collection") must equal ( MongoSelectQuery(MongoSelection(Set(JPath("foo"), JPath("bar"))), "collection") )
   }
   "creates selectAndUpdate query" in{
-    selectAndUpdate("collection").set(jObject) mustEqual ( MongoSelectAndUpdateQuery("collection", jObject, None, None, MongoSelection(Set()), false, false) )
+    selectAndUpdate("collection").set(jObject) must equal ( MongoSelectAndUpdateQuery("collection", jObject, None, None, MongoSelection(Set()), false, false) )
   }
   "creates selectAndUpsert query" in{
-    selectAndUpsert("collection").set(jObject) mustEqual ( MongoSelectAndUpdateQuery("collection", jObject, None, None, MongoSelection(Set()), false, true) )
+    selectAndUpsert("collection").set(jObject) must equal ( MongoSelectAndUpdateQuery("collection", jObject, None, None, MongoSelection(Set()), false, true) )
   }
   "creates selectAndRemove query" in{
-    selectAndRemove.from("collection") mustEqual ( MongoSelectAndRemoveQuery("collection", None, None, MongoSelection(Set())) )
+    selectAndRemove.from("collection") must equal ( MongoSelectAndRemoveQuery("collection", None, None, MongoSelection(Set())) )
   }
   "creates group query" in{
-    group(JObject(Nil), "dummy", "foo", "bar").from("collection") mustEqual ( MongoGroupQuery(MongoSelection(Set(JPath("foo"), JPath("bar"))), "collection", JObject(Nil), "dummy") )
+    group(JObject(Nil), "dummy", "foo", "bar").from("collection") must equal ( MongoGroupQuery(MongoSelection(Set(JPath("foo"), JPath("bar"))), "collection", JObject(Nil), "dummy") )
   }
   "creates mapReduce query" in{
-    mapReduce("foo", "bar").from("collection") mustEqual ( MongoMapReduceQuery("foo", "bar",  "collection") )
+    mapReduce("foo", "bar").from("collection") must equal ( MongoMapReduceQuery("foo", "bar",  "collection") )
   }
   "creates distinct query" in{
-    distinct("foo").from("collection") mustEqual ( MongoDistinctQuery(JPath("foo"), "collection") )
+    distinct("foo").from("collection") must equal ( MongoDistinctQuery(JPath("foo"), "collection") )
   }
   "creates selectOne query" in{
-    selectOne("foo", "bar").from("collection") mustEqual ( MongoSelectOneQuery(MongoSelection(Set(JPath("foo"), JPath("bar"))), "collection") )
+    selectOne("foo", "bar").from("collection") must equal ( MongoSelectOneQuery(MongoSelection(Set(JPath("foo"), JPath("bar"))), "collection") )
   }
   "creates remove query" in{
-    remove.from("collection") mustEqual ( MongoRemoveQuery("collection") )
+    remove.from("collection") must equal ( MongoRemoveQuery("collection") )
   }
   "creates count query" in{
-    count.from("collection") mustEqual ( MongoCountQuery("collection") )
+    count.from("collection") must equal ( MongoCountQuery("collection") )
   }
   "creates insert query" in{
-    insert(jObject).into("collection") mustEqual ( MongoInsertQuery("collection", jObject :: Nil) )
+    insert(jObject).into("collection") must equal ( MongoInsertQuery("collection", jObject :: Nil) )
   }
   "creates ensureIndex query" in{
-    ensureIndex("index").on("address.city").in("collection") mustEqual ( MongoEnsureIndexQuery("collection", "index", List[Tuple2[JPath, IndexType]](Tuple2(JPath("address.city"), OrdinaryIndex)), false) )
+    ensureIndex("index").on("address.city").in("collection") must equal ( MongoEnsureIndexQuery("collection", "index", List[Tuple2[JPath, IndexType]](Tuple2(JPath("address.city"), OrdinaryIndex)), false) )
   }
   "creates dropIndex query" in{
-    dropIndex("index").in("collection") mustEqual ( MongoDropIndexQuery("collection", "index") )
+    dropIndex("index").in("collection") must equal ( MongoDropIndexQuery("collection", "index") )
   }
   "creates dropIndexes query" in{
-    dropIndexes.in("collection") mustEqual ( MongoDropIndexesQuery("collection") )
+    dropIndexes.in("collection") must equal ( MongoDropIndexesQuery("collection") )
   }
   "creates ensureUniqueIndex query" in{
-    ensureUniqueIndex("index").on("address.city").in("collection") mustEqual ( MongoEnsureIndexQuery("collection", "index", List[Tuple2[JPath, IndexType]](Tuple2(JPath("address.city"), OrdinaryIndex)), true) )
+    ensureUniqueIndex("index").on("address.city").in("collection") must equal ( MongoEnsureIndexQuery("collection", "index", List[Tuple2[JPath, IndexType]](Tuple2(JPath("address.city"), OrdinaryIndex)), true) )
   }
   "creates update query" in{
-    update("collection").set(jObject) mustEqual ( MongoUpdateQuery("collection", jObject) )
+    update("collection").set(jObject) must equal ( MongoUpdateQuery("collection", jObject) )
   }
   "creates updateMany query" in{
-    updateMany("collection").set(jObject) mustEqual ( MongoUpdateQuery("collection", jObject, None, false, true) )
+    updateMany("collection").set(jObject) must equal ( MongoUpdateQuery("collection", jObject, None, false, true) )
   }
   "creates upsert query" in{
-    upsert("collection").set(jObject) mustEqual ( MongoUpdateQuery("collection", jObject, None, true, false) )
+    upsert("collection").set(jObject) must equal ( MongoUpdateQuery("collection", jObject, None, true, false) )
   }
   "creates upsertMany query" in{
-    upsertMany("collection").set(jObject) mustEqual ( MongoUpdateQuery("collection", jObject, None, true, true) )
+    upsertMany("collection").set(jObject) must equal ( MongoUpdateQuery("collection", jObject, None, true, true) )
   } 
 }
