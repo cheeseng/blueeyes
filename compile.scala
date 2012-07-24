@@ -27,7 +27,9 @@ val jettySecurity = ivy + "/org.eclipse.jetty/jetty-security/jars/jetty-security
 val jettyUtil = ivy + "/org.eclipse.jetty/jetty-util/jars/jetty-util-8.1.3.v20120416.jar"
 val jettyHttp = ivy + "/org.eclipse.jetty/jetty-http/jars/jetty-http-8.1.3.v20120416.jar"
 val jettyIO = ivy + "/org.eclipse.jetty/jetty-io/jars/jetty-io-8.1.3.v20120416.jar"
-val scalatest = "lib/scalatest.jar"
+val scalatest = ivy + "/org.scalatest/scalatest_2.9.1/jars/scalatest_2.9.1-2.0.M2.jar"
+val mongodb = ivy + "/org.mongodb/mongo-java-driver/jars/mongo-java-driver-2.7.3.jar"
+val rhino = ivy + "/rhino/js/jars/js-1.7R2.jar"
 
 val targetClasses = new File("target/classes")
 targetClasses.delete()
@@ -68,7 +70,9 @@ val mainClasspathList = List(scalaz,
                             servlet, 
                             specs2, 
                             scalatest, 
-                            ":target/classes")  // needs to be here so that when compiling core, it can find compiled json classes
+                            mongodb, 
+                            rhino,
+                            "target/classes")  // needs to be here so that when compiling core, it can find compiled json classes
 
 val testClasspathList = mainClasspathList ++ 
                         List(mockito,
@@ -77,7 +81,8 @@ val testClasspathList = mainClasspathList ++
                              jettySecurity, 
                              jettyUtil, 
                              jettyHttp, 
-                             jettyIO)
+                             jettyIO, 
+                             "target/test_classes")
 
 val mainClasspath = mainClasspathList.mkString(":")
 val testClasspath = testClasspathList.mkString(":")
@@ -113,6 +118,8 @@ compile("json/main", "json/src/main/scala", mainClasspath, targetClasses.getAbso
 compile("json/test", "json/src/test/scala", testClasspath, targetTestClasses.getAbsolutePath)
 compile("core/main", "core/src/main/scala", mainClasspath, targetClasses.getAbsolutePath)
 compile("core/test", "core/src/test/scala", testClasspath, targetTestClasses.getAbsolutePath)
+compile("mongo/main", "mongo/src/main/scala", mainClasspath, targetClasses.getAbsolutePath)
+compile("mongo/test", "mongo/src/test/scala", testClasspath, targetTestClasses.getAbsolutePath)
 val end = System.currentTimeMillis
 copy("json/src/test/resources/diff-example-expected-additions.json", targetTestClasses.getAbsolutePath)
 copy("json/src/test/resources/diff-example-expected-changes.json", targetTestClasses.getAbsolutePath)
