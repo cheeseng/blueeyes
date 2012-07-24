@@ -1,11 +1,13 @@
 package blueeyes.persistence.mongo
 
-import org.specs2.mutable.Specification
+import org.scalatest._
+import org.scalatest.mock.MockitoSugar
 import blueeyes.json.JsonAST._
 import com.mongodb.MongoException
-import org.specs2.mock._
+import org.mockito.Mockito._
+import blueeyes.concurrent.test.AkkaFutures
 
-class MongoQueryBehaviourSpec extends Specification with Mockito{
+class MongoQueryBehaviourSpec extends WordSpec with MustMatchers with MockitoSugar with AkkaFutures {
   private object verifiableQuery extends QueryBehaviours.MongoQueryBehaviour {
     val isVerifiable = true
     type QueryResult = Int
@@ -21,41 +23,40 @@ class MongoQueryBehaviourSpec extends Specification with Mockito{
   "MongoQueryBehaviourSpec: calls underlying verifiable query" in{
     val collection  = mock[DatabaseCollection]
 
-    collection.getLastError returns None
+    when(collection.getLastError) thenReturn None
 
     val result: Int    = verifiableQuery(collection)
 
-    there was one(collection).requestStart
-    there was one(collection).getLastError
-    there was one(collection).requestDone
+    verify(collection, times(1)).requestStart
+    verify(collection, times(1)).getLastError
+    verify(collection, times(1)).requestDone
 
-
-    result.value must eventually (be_==(1))
+    result.value must equal (1)
   }
 
   "MongoQueryBehaviourSpec: calls underlying unverifiable query" in{
     val collection  = mock[DatabaseCollection]
 
-    collection.getLastError returns None
+    when(collection.getLastError) thenReturn None
 
     val result: Int    = unverifiableQuery(collection)
 
-    there was no(collection).requestStart
-    there was no(collection).getLastError
-    there was no(collection).requestDone
+    verify(collection, times(0)).requestStart
+    verify(collection, times(0)).getLastError
+    verify(collection, times(0)).requestDone
 
-    result.value must eventually (be_==(1))
+    result.value must equal (1)
   }
 
   "MongoQueryBehaviourSpec: throw error when verifiable operation failed" in{
     val collection  = mock[DatabaseCollection]
 
-    collection.getLastError returns Some(new com.mongodb.BasicDBObject())
+    when(collection.getLastError) thenReturn Some(new com.mongodb.BasicDBObject())
 
-    verifiableQuery(collection) must throwAn[MongoException]
+    intercept[MongoException] { verifiableQuery(collection) }
 
-    there was one(collection).requestStart
-    there was one(collection).getLastError
-    there was one(collection).requestDone
+    verify(collection, times(1)).requestStart
+    verify(collection, times(1)).getLastError
+    verify(collection, times(1)).requestDone
   }
 }
