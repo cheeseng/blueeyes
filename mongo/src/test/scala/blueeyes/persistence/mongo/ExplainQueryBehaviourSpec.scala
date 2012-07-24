@@ -1,11 +1,12 @@
 package blueeyes.persistence.mongo
 
-import org.specs2.mutable.Specification
+import org.scalatest._
 import blueeyes.json.JsonAST._
 import blueeyes.json.{JPath, JsonParser}
-import org.specs2.mock._
+import org.mockito.Mockito._
+import org.scalatest.mock.MockitoSugar
 
-class ExplainQueryBehaviourSpec extends Specification with Mockito{
+class ExplainQueryBehaviourSpec extends WordSpec with MustMatchers with MockitoSugar {
   private val explanation = JsonParser.parse("""{
     "cursor" : "BasicCursor",
     "nscanned" : 3,
@@ -25,14 +26,14 @@ class ExplainQueryBehaviourSpec extends Specification with Mockito{
 
   "Call collection method" in{
     val collection  = mock[DatabaseCollection]
-    collection.getLastError returns None
-    collection.explain(keys, None, None, None, None, None, false) returns explanation
+    when(collection.getLastError) thenReturn None
+    when(collection.explain(keys, None, None, None, None, None, false)) thenReturn explanation
 
     val query  = select("foo", "bar").from("collection").explain
     val result: JObject = query(collection)
 
-    there was one(collection).explain(keys, None, None, None, None, None, false)
-    result mustEqual(explanation)
+    verify(collection, times(1)).explain(keys, None, None, None, None, None, false)
+    result must equal (explanation)
   }
 
 }
