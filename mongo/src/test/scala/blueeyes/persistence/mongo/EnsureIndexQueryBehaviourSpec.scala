@@ -1,20 +1,21 @@
 package blueeyes.persistence.mongo
 
-import org.specs2.mutable.Specification
+import org.scalatest._
+import org.scalatest.mock.MockitoSugar
 import MongoQueryBuilder._
 import org.mockito.Matchers._
 import blueeyes.json.JsonAST._
 import blueeyes.json.JPath
-import org.specs2.mock.Mockito
+import org.mockito.Mockito._
 
-class EnsureIndexQueryBehaviourSpec extends Specification with Mockito {
+class EnsureIndexQueryBehaviourSpec extends WordSpec with MustMatchers with MockitoSugar {
   "Call collection method" in {
     val collection  = mock[DatabaseCollection]
-    collection.getLastError returns None
+    when(collection.getLastError) thenReturn None
 
     val query = ensureUniqueIndex("index").on("address.city", "address.street").in("collection")
     query(collection)
 
-    there was one(collection).ensureIndex("index", List(Tuple2(JPath("address.city"), OrdinaryIndex), Tuple2(JPath("address.street"), OrdinaryIndex)), true, JObject(Nil))
+    verify(collection, times(1)).ensureIndex("index", List(Tuple2(JPath("address.city"), OrdinaryIndex), Tuple2(JPath("address.street"), OrdinaryIndex)), true, JObject(Nil))
   }
 }
